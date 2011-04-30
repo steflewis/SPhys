@@ -1,0 +1,863 @@
+#include "TFile.h"
+#include "TTree.h"
+#include "TRandom3.h"
+#include "TDatabasePDG.h"
+#include "TPDGCode.h"
+#include "TLorentzVector.h"
+#include "TVector3.h"
+#include "TF1.h"
+#include "TBenchmark.h"
+#include "TSystem.h"
+#include "TMath.h"
+#include "TH2.h"
+#include "TH3.h"
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+using namespace std;
+
+// ------------------------------------------------------------------------------------------------
+
+// Functions
+void     InitOutput();
+void     GenerateReaction();
+void     DecayReaction();
+void     TrackLambda();
+Int_t    DecayLambda(); 
+Int_t    ReadConfig(string); 
+Double_t KinDelta(Double_t,Double_t,Double_t);
+
+// Random number generator
+TRandom3*       fRand;
+
+// PDG Database
+TDatabasePDG*   fPDG;
+
+// Output G4/DGI
+TFile*          fROOTFile;
+TTree*          fROOTTree;
+TString*        fOutFileName;
+TH2F*           h2dxyPRE;
+TH2F*           h2dyzPRE;
+TH2F*           h2dzxPRE;
+TH2F*           h2xPhiPRE;
+TH2F*           h2yPhiPRE;
+TH2F*           h2zPhiPRE;
+TH2F*           h2sigma_x;
+TH2F*           h2sigma_y;
+TH2F*           h2sigma_z;
+TH2F*           h2dxy;
+TH2F*           h2dyz;
+TH2F*           h2dzx;
+TH2F*           h2xPhi;
+TH2F*           h2yPhi;
+TH2F*           h2zPhi;
+TH1F*           h1cs;
+TH1F*           h1PtotXLAB;	//	check that momentum is conserved
+TH1F*           h1PtotYLAB;	//	: LAB frame
+TH1F*           h1PtotZLAB;	//
+TH1F*           h1PtotTLAB;	//
+TH1F*           h1PtotXCM;	//	check that momentum is conserved
+TH1F*           h1PtotYCM;	//	: Overall CM frame
+TH1F*           h1PtotZCM;	//
+TH1F*           h1PtotTCM;	//
+TH1F*           h1PtotXLR;	//	check that momentum is conserved
+TH1F*           h1PtotYLR;	//	: Lambda Rest Frame
+TH1F*           h1PtotZLR;	//
+TH1F*           h1PtotTLR;	//
+Int_t           fBasket       = 64000;
+Float_t         fVx;
+Float_t         fVy;
+Float_t         fVz;
+Float_t         fBeamPx;
+Float_t         fBeamPy;
+Float_t         fBeamPz;
+Float_t         fBeamEn;
+Float_t         fKplusPx;
+Float_t         fKplusPy;
+Float_t         fKplusPz;
+Float_t         fKplusE;
+Float_t         fProtonPx;
+Float_t         fProtonPy;
+Float_t         fProtonPz;
+Float_t         fProtonE;
+Float_t         fPiminusPx;
+Float_t         fPiminusPy;
+Float_t         fPiminusPz;
+Float_t         fPiminusE;
+
+// Output GSIM
+FILE*           fGSIMFile;
+
+// Photon Beam
+Int_t           fBeamPDG      =  22;
+Float_t         fBeamThMin    =  0.0;
+Float_t         fBeamThMax    =  0.001;
+Float_t         fBeamPhMin    =  -TMath::Pi();
+Float_t         fBeamPhMax    =  TMath::Pi();
+Float_t         fBeamE        =  2.5;
+TLorentzVector* fBeamP4;
+TVector3*       fBeamCentre;
+
+// Proton Target
+Int_t           fTargetPDG    =  2212;
+Float_t         fTargetLength =  20.0;
+Float_t         fTargetRadius =  0.2;;
+TLorentzVector* fTargetP4;
+TVector3*       fTargetCentre;
+
+// Reaction
+TLorentzVector* fReactionP4;
+TVector3*       fReactionVertex;
+
+// Kplus
+Int_t           fKplusPDG     =  321;
+TLorentzVector* fKplusP4;
+
+// Lambda
+Int_t           fLambdaPDG    =  3122;
+TLorentzVector* fLambdaP4;
+TVector3*       fLambdaVertex;
+
+// Proton
+Int_t           fProtonPDG    =  2212;
+TLorentzVector* fProtonP4;
+
+// pi-
+Int_t           fPiminusPDG    = -211;
+TLorentzVector* fPiminusP4;
+
+// Polarisation Observables
+Float_t         fPolBeam;
+Float_t         fPolAweak;
+Float_t         fPolSigma;
+Float_t         fPolP;
+Float_t         fPolT;
+Float_t         fPolOX;
+Float_t         fPolOZ;
+
+//	Reaction plane angle needs to be global...
+Float_t		fKaonPhiLAB;
+TVector3        *z_axis, *y_axis_tmp, *y_axis, *x_axis;
+
+// Polarsiation and output modes
+enum            { kPARA, kPERP, kAMO  };
+enum            { kG4,   kDGI,  kGSIM };
+UInt_t          fPolMode       = kPARA;
+UInt_t          fOutMode       = kDGI;
+
+// ------------------------------------------------------------------------------------------------
+
+void KLambdaGenP( UInt_t pol, UInt_t out, UInt_t seed, ULong64_t nev, string fileName )
+{
+    //	Read configuration...
+    if ( ReadConfig(fileName) ) {
+	cerr << "Error: failed to read " << fileName << endl;
+    }
+
+
+  // Initialise random number generator
+  fRand = new TRandom3(seed);
+
+  // Set up PDG Table
+  fPDG             = new TDatabasePDG();
+  TString pdgtable = gSystem->Getenv("ROOTSYS");
+  pdgtable.Append("/etc/pdg_table.txt");
+  fPDG->ReadPDGTable(pdgtable);
+
+  // Initialise 3- and 4-vectors
+  fBeamCentre     = new TVector3( 0., 0., -500. );
+  fTargetCentre   = new TVector3( 0., 0.,  0.   );
+  fReactionVertex = new TVector3( 0., 0.,  0.   );
+  fLambdaVertex   = new TVector3( 0., 0.,  0.   );
+  z_axis          = new TVector3( 0., 0.,  0.   );
+  y_axis          = new TVector3( 0., 0.,  0.   );
+  y_axis_tmp      = new TVector3( 0., 0.,  0.   );
+  x_axis          = new TVector3( 0., 0.,  0.   );
+  fBeamP4         = new TLorentzVector( 0., 0., 0., fPDG->GetParticle(fBeamPDG)->Mass() );
+  fTargetP4       = new TLorentzVector( 0., 0., 0., fPDG->GetParticle(fTargetPDG)->Mass() );
+  fReactionP4     = new TLorentzVector( 0., 0., 0., 1. );
+  fKplusP4        = new TLorentzVector( 0., 0., 0., 1. );
+  fLambdaP4       = new TLorentzVector( 0., 0., 0., 1. );
+  fProtonP4       = new TLorentzVector( 0., 0., 0., 1. );
+  fPiminusP4      = new TLorentzVector( 0., 0., 0., 1. );
+
+  fOutFileName = new TString("Gen_KLambda");
+  // Get PARA, PERP or AMO flag
+  fPolMode = pol;
+  switch( fPolMode ) {
+  case kPARA: 
+    cout << "PARA selected" << endl;
+    fOutFileName->Append("PARA");
+    fPolBeam = fPolBeam;
+    break;
+  case kPERP:
+    cout << "PERP selected" << endl;
+    fOutFileName->Append("PERP");
+    fPolBeam = -fPolBeam;
+    break;
+  case kAMO:
+    cout << "AMO selected" << endl;
+    fOutFileName->Append("AMO");
+    fPolBeam = 0.;
+    break;
+  default:
+    cout << "ERROR: No Polarisation setting selected." << endl;
+    exit(-1);
+  }
+ 
+  // Open output file and set up structure
+  fOutMode = out;
+  InitOutput();
+  
+  // Zero counters and stats
+  ULong64_t   nTotal = 0;
+  TBenchmark* bench  = new TBenchmark();
+  bench->Start("Statistics");
+  
+  for( ULong64_t i = 0; i < nev; i++ ) {
+
+    // Generate reaction (g + p -> K+ + Lambda0)
+    GenerateReaction();
+    DecayReaction();
+      
+    // Detach Lambda vertex and decay it (Lambda0 -> p + pi-)
+    TrackLambda();
+    if( DecayLambda() == 0 ) {
+      
+      // Fill output tree, ntuple or text file
+      fVx        = (Float_t)fReactionVertex->X();
+      fVy        = (Float_t)fReactionVertex->Y();
+      fVz        = (Float_t)fReactionVertex->Z();
+      fBeamPx    = (Float_t)fBeamP4->Px();
+      fBeamPy    = (Float_t)fBeamP4->Py();
+      fBeamPz    = (Float_t)fBeamP4->Pz();
+      fBeamEn    = (Float_t)fBeamP4->E();
+      fKplusPx   = (Float_t)fKplusP4->Px();
+      fKplusPy   = (Float_t)fKplusP4->Py();
+      fKplusPz   = (Float_t)fKplusP4->Pz();
+      fKplusE    = (Float_t)fKplusP4->E();
+      fProtonPx  = (Float_t)fProtonP4->Px();
+      fProtonPy  = (Float_t)fProtonP4->Py();
+      fProtonPz  = (Float_t)fProtonP4->Pz();
+      fProtonE   = (Float_t)fProtonP4->E();
+      fPiminusPx = (Float_t)fPiminusP4->Px();
+      fPiminusPy = (Float_t)fPiminusP4->Py();
+      fPiminusPz = (Float_t)fPiminusP4->Pz();
+      fPiminusE  = (Float_t)fPiminusP4->E();
+
+      if(fOutMode == kG4 || fOutMode == kDGI) {
+	fROOTTree->Fill();
+      }
+      else if(fOutMode == kGSIM) {
+	fprintf( fGSIMFile, "%d\n", (Int_t)nTotal);
+	fprintf( fGSIMFile, "%d\t%f\t%f\t%f\t%f\n", fKplusPDG, fKplusP4->Vect().Unit().x(), 
+		 fKplusP4->Vect().Unit().y(), fKplusP4->Vect().Unit().z(), fKplusP4->P() );
+	fprintf( fGSIMFile, "%f\t%f\n", fPDG->GetParticle(fKplusPDG)->Mass(),  fPDG->GetParticle(fKplusPDG)->Charge()/3 );
+	fprintf( fGSIMFile, "%f\t%f\t%f\t%f\n", fVx, fVy, fVz, 23.2);
+	fprintf( fGSIMFile, "%d\n", (Int_t)nTotal);
+	fprintf( fGSIMFile, "%d\t%f\t%f\t%f\t%f\n", fProtonPDG, fProtonP4->Vect().Unit().x(), 
+		 fProtonP4->Vect().Unit().y(), fProtonP4->Vect().Unit().z(), fProtonP4->P() );
+	fprintf( fGSIMFile, "%f\t%f\n", fPDG->GetParticle(fProtonPDG)->Mass(),  fPDG->GetParticle(fProtonPDG)->Charge()/3 );
+	fprintf( fGSIMFile, "%f\t%f\t%f\t%f\n", fVx, fVy, fVz, 23.2);
+	fprintf( fGSIMFile, "%d\n", (Int_t)nTotal);
+	fprintf( fGSIMFile, "%d\t%f\t%f\t%f\t%f\n", fPiminusPDG, fPiminusP4->Vect().Unit().x(), 
+		 fPiminusP4->Vect().Unit().y(), fPiminusP4->Vect().Unit().z(), fPiminusP4->P() );
+	fprintf( fGSIMFile, "%f\t%f\n", fPDG->GetParticle(fPiminusPDG)->Mass(),  fPDG->GetParticle(fPiminusPDG)->Charge()/3 );
+	fprintf( fGSIMFile, "%f\t%f\t%f\t%f\n", fVx, fVy, fVz, 23.2);
+      }
+
+      nTotal++;
+      if( nTotal % 100000 == 0 ) 
+	cout << nTotal << endl;
+    }
+    else 
+	continue;
+  }
+
+  // Clean up input and output files
+  if(fOutMode == kG4 || fOutMode == kDGI) {
+    h2dxyPRE->Write();
+    h2dyzPRE->Write();
+    h2dzxPRE->Write();
+    h2xPhiPRE->Write();
+    h2yPhiPRE->Write();
+    h2zPhiPRE->Write();
+    h2sigma_x->Write();
+    h2sigma_y->Write();
+    h2sigma_z->Write();
+    h2dxy->Write();
+    h2dyz->Write();
+    h2dzx->Write();
+    h2xPhi->Write();
+    h2yPhi->Write();
+    h2zPhi->Write();
+    h1cs->Write();
+    h1PtotXLAB->Write();
+    h1PtotYLAB->Write();
+    h1PtotZLAB->Write();
+    h1PtotTLAB->Write();
+    h1PtotXCM->Write();
+    h1PtotYCM->Write();
+    h1PtotZCM->Write();
+    h1PtotTCM->Write();
+    h1PtotXLR->Write();
+    h1PtotYLR->Write();
+    h1PtotZLR->Write();
+    h1PtotTLR->Write();
+    fROOTTree->Write();
+    fROOTFile->Close();
+  }
+  else if(fOutMode == kGSIM)
+    fclose(fGSIMFile);
+  
+  // Print stats
+  bench->Stop("Statistics");
+  cout << "\t" <<  nTotal    << " total events"      << endl; 
+  cout << "\t" <<  (Float_t)nTotal/(Float_t)nev    << " acceptance fraction"      << endl; 
+  bench->Print("Statistics");
+
+  // Clean up
+  delete fOutFileName;
+  delete h2dxyPRE;
+  delete h2dyzPRE;
+  delete h2dzxPRE;
+  delete h2xPhiPRE;
+  delete h2yPhiPRE;
+  delete h2zPhiPRE;
+  delete h2sigma_x;
+  delete h2sigma_y;
+  delete h2sigma_z;
+  delete h2dxy;
+  delete h2dyz;
+  delete h2dzx;
+  delete h2xPhi;
+  delete h2yPhi;
+  delete h2zPhi;
+  delete h1cs;  
+  delete h1PtotXLAB;  
+  delete h1PtotYLAB;  
+  delete h1PtotZLAB;  
+  delete h1PtotTLAB;  
+  delete h1PtotXCM;  
+  delete h1PtotYCM;  
+  delete h1PtotZCM;  
+  delete h1PtotTCM;  
+  delete h1PtotXLR;  
+  delete h1PtotYLR;  
+  delete h1PtotZLR;  
+  delete h1PtotTLR;  
+  delete bench;
+  delete fPiminusP4;
+  delete fProtonP4;
+  delete fLambdaVertex;
+  delete fLambdaP4;
+  delete fKplusP4;
+  delete fReactionVertex;
+  delete fReactionP4;
+  delete fTargetCentre;
+  delete fTargetP4;
+  delete fBeamCentre;
+  delete fBeamP4;
+  delete fPDG;
+  delete fRand;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void InitOutput()
+{
+    h2dxyPRE    = new TH2F("h2dxyPRE", "h2dxyPRE", 50, -1, 1, 50, -1, 1);
+    h2dyzPRE    = new TH2F("h2dyzPRE", "h2dyzPRE", 50, -1, 1, 50, -1, 1);
+    h2dzxPRE    = new TH2F("h2dzxPRE", "h2dzxPRE", 50, -1, 1, 50, -1, 1);
+    h2xPhiPRE    = new TH2F("h2xPhiPRE", "h2xPhiPRE", 50, -TMath::Pi(), TMath::Pi(), 20, -1, 1);
+    h2yPhiPRE    = new TH2F("h2yPhiPRE", "h2yPhiPRE", 50, -TMath::Pi(), TMath::Pi(), 20, -1, 1);
+    h2zPhiPRE    = new TH2F("h2zPhiPRE", "h2zPhiPRE", 50, -TMath::Pi(), TMath::Pi(), 20, -1, 1);
+    h2sigma_x   = new TH2F("h2sigma_x", "h2sigma_x", 50, -1, 3, 50, -1, 1);
+    h2sigma_y   = new TH2F("h2sigma_y", "h2sigma_y", 50, -1, 3, 50, -1, 1);
+    h2sigma_z   = new TH2F("h2sigma_z", "h2sigma_z", 50, -1, 3, 50, -1, 1);
+    h2dxy       = new TH2F("h2dxy", "h2dxy", 50, -1, 1, 50, -1, 1);
+    h2dyz       = new TH2F("h2dyz", "h2dyz", 50, -1, 1, 50, -1, 1);
+    h2dzx       = new TH2F("h2dzx", "h2dzx", 50, -1, 1, 50, -1, 1);
+    h2xPhi    = new TH2F("h2xPhi", "h2xPhi", 50, -TMath::Pi(), TMath::Pi(), 20, -1, 1);
+    h2yPhi    = new TH2F("h2yPhi", "h2yPhi", 50, -TMath::Pi(), TMath::Pi(), 20, -1, 1);
+    h2zPhi    = new TH2F("h2zPhi", "h2zPhi", 50, -TMath::Pi(), TMath::Pi(), 20, -1, 1);
+    h1cs       = new TH1F("h1cs", "h1cs", 100, -1, 3);
+    h1PtotXLAB = new TH1F("h1PtotXLAB", "h1PtotXLAB", 100, -0.1, 0.1);
+    h1PtotYLAB = new TH1F("h1PtotYLAB", "h1PtotYLAB", 100, -0.1, 0.1);
+    h1PtotZLAB = new TH1F("h1PtotZLAB", "h1PtotZLAB", 100, -0.1, 0.1);
+    h1PtotTLAB = new TH1F("h1PtotTLAB", "h1PtotTLAB", 100, -0.1, 0.1);
+    h1PtotXCM  = new TH1F("h1PtotXCM", "h1PtotXCM", 100, -0.1, 0.1);
+    h1PtotYCM  = new TH1F("h1PtotYCM", "h1PtotYCM", 100, -0.1, 0.1);
+    h1PtotZCM  = new TH1F("h1PtotZCM", "h1PtotZCM", 100, -0.1, 0.1);
+    h1PtotTCM  = new TH1F("h1PtotTCM", "h1PtotTCM", 100, -0.1, 0.1);
+    h1PtotXLR  = new TH1F("h1PtotXLR", "h1PtotXLR", 100, -0.1, 0.1);
+    h1PtotYLR  = new TH1F("h1PtotYLR", "h1PtotYLR", 100, -0.1, 0.1);
+    h1PtotZLR  = new TH1F("h1PtotZLR", "h1PtotZLR", 100, -0.1, 0.1);
+    h1PtotTLR  = new TH1F("h1PtotTLR", "h1PtotTLR", 100, -0.1, 0.1);
+
+  switch( fOutMode ) {
+  case kG4:
+    cout << "Geant4 output selected" << endl;
+    fOutFileName->Append("_G4.root");
+    fROOTFile = new TFile(fOutFileName->Data(),"RECREATE","fROOTfile",1);
+    fROOTTree = new TTree("h1","Generator Output Tree G4");
+    fROOTTree->SetAutoSave();
+    
+    fROOTTree->Branch("X_vtx",   &fVx,        "X_vtx/F",  fBasket);
+    fROOTTree->Branch("Y_vtx",   &fVy,        "Y_vtx/F",  fBasket);
+    fROOTTree->Branch("Z_vtx",   &fVz,        "Z_vtx/F",  fBasket);
+    
+    fROOTTree->Branch("Px_Gam",  &fBeamPx,    "Px_Gam/F", fBasket);
+    fROOTTree->Branch("Py_Gam",  &fBeamPy,    "Py_Gam/F", fBasket);
+    fROOTTree->Branch("Pz_Gam",  &fBeamPz,    "Pz_Gam/F", fBasket);
+    fROOTTree->Branch("En_Gam",  &fBeamE,     "En_Gam/F", fBasket);
+
+    fROOTTree->Branch("Px_Kp",   &fKplusPx,   "Px_Kp/F",  fBasket);
+    fROOTTree->Branch("Py_Kp",   &fKplusPy,   "Py_Kp/F",  fBasket);
+    fROOTTree->Branch("Pz_Kp",   &fKplusPz,   "Pz_Kp/F",  fBasket);
+    fROOTTree->Branch("En_Kp",   &fKplusE,    "En_Kp/F",  fBasket);
+    
+    fROOTTree->Branch("Px_P",    &fProtonPx,  "Px_P/F",   fBasket);
+    fROOTTree->Branch("Py_P",    &fProtonPy,  "Py_P/F",   fBasket);
+    fROOTTree->Branch("Pz_P",    &fProtonPz,  "Pz_P/F",   fBasket);
+    fROOTTree->Branch("En_P",    &fProtonE,   "En_P/F",   fBasket);
+    
+    fROOTTree->Branch("Px_Pim",  &fPiminusPx, "Px_Pim/F", fBasket);
+    fROOTTree->Branch("Py_Pim",  &fPiminusPy, "Py_Pim/F", fBasket);
+    fROOTTree->Branch("Pz_Pim",  &fPiminusPz, "Pz_Pim/F", fBasket);
+    fROOTTree->Branch("En_Pim",  &fPiminusE,  "En_Pim/F", fBasket);
+    break;
+  case kDGI:
+    cout << "DGI root output selected" << endl;
+    fOutFileName->Append("_DGI.root");
+    fROOTFile = new TFile(fOutFileName->Data(),"RECREATE","fROOTfile",1);
+    fROOTTree = new TTree("h1","Generator Output Tree DGI");
+
+    fROOTTree->Branch("Egam", &fBeamE,          "Egam/F",   fBasket);
+    fROOTTree->Branch("Pgam", &fPolBeam,        "Pgam/F",   fBasket);
+    fROOTTree->Branch("P4K",  "TLorentzVector", &fKplusP4,  fBasket, 0);
+    fROOTTree->Branch("P4P",  "TLorentzVector", &fProtonP4, fBasket, 0);
+    break;
+  case kGSIM:
+    cout << "GSIM ascii output selected" << endl;
+    fOutFileName->Append("_GSIM.txt");
+    fGSIMFile = fopen(fOutFileName->Data(),"w");
+    break;
+  default:
+    cout << "ERROR: No output mode selected." << endl;
+    exit(-1);
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void GenerateReaction()
+{
+  // Generate a vertex position within physical target limits and add beam + target 4-vectors
+  Float_t eBeam, mBeam, phiBeam, thbeam, costh, sinth;
+
+  TVector3 beamTarget = *fTargetCentre - *fBeamCentre;
+  Float_t tDmin       = beamTarget.Mag() - 0.5 * fTargetLength;
+  Float_t tDmax       = tDmin + fTargetLength;
+  Float_t tR, tD, x,y,z; 
+  TVector3 beamDir, beamP;
+
+  tD = fRand->Uniform( tDmin, tDmax );     
+
+  do {
+    thbeam = fRand->Uniform(fBeamThMin, fBeamThMax);             
+    costh  = TMath::Cos(thbeam); 
+    sinth  = TMath::Sin(thbeam);
+    tR     = tD * sinth/costh;                
+  } while( tR > fTargetRadius );           
+
+  phiBeam = fRand->Uniform(fBeamPhMin, fBeamPhMax);                 
+  x       = sinth * TMath::Cos(phiBeam);        
+  y       = sinth * TMath::Sin(phiBeam);
+  z       = costh;
+//   beamDir.SetXYZ(x,y,z);        
+  beamDir.SetXYZ(0,0,1);        
+
+  z       = tD + fBeamCentre->Z();              
+  x       = x  * tD/costh;
+  y       = y  * tD/costh;
+//   fReactionVertex->SetXYZ(x,y,z);                 
+  fReactionVertex->SetXYZ(0,0,0);                 
+
+  mBeam = fPDG->GetParticle(fBeamPDG)->Mass();
+  eBeam = fBeamE + mBeam;
+  beamP = TMath::Sqrt( eBeam*eBeam - mBeam*mBeam ) * beamDir;
+  
+  fBeamP4->SetVect( beamP );
+  fBeamP4->SetE( eBeam );
+
+  //fKaonPhiLAB  = fRand->Uniform( 0, TMath::TwoPi() );
+  *fReactionP4 = *fBeamP4 + *fTargetP4;
+  //	SYSTEM       FRAME      COORDINATES
+  //	Beam:	     LAB (-)	LAB (-)
+  //	Reaction:    LAB (-)   	LAB (-)
+  //	Kaon:         -          -
+  //	Lambda:       -          -
+  //      |- Proton:  -          -
+  //	  \- Pion:    -          -
+  //	(v3Boost: - )
+
+  //	Rotate so that Y is perpendicular to the reaction plane. Note
+  //	that rotations are active (the vector is rotated rather than
+  //	the axes). Note also that the azimuthal angle is invariant
+  //	LAB->CM. Note finally that the rotation has to be reversed at
+  //	the end to go from unprimed coordinates to lab coordinates.
+  //fReactionP4->RotateZ(-fKaonPhiLAB);
+  //	SYSTEM       FRAME      COORDINATES
+  //	Beam:	     LAB (-)	LAB (-)
+  //	Reaction:    LAB       	Unpr (LAB)
+  //	Kaon:         -          -
+  //	Lambda:       -          -
+  //      |- Proton:  -          -
+  //	  \- Pion:    -          -
+  //	(v3Boost: - )
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void DecayReaction()
+{
+  // Decay intermediate reaction state according to phase space and photon polarisation
+  Float_t  M  = fReactionP4->M();
+  Float_t  m1 = fPDG->GetParticle(fKplusPDG)->Mass(); 
+  Float_t  m2 = fPDG->GetParticle(fLambdaPDG)->Mass();
+  Float_t  p1cm, th1cm, costh1cm, ph1cm;
+  Float_t  px1cm, py1cm, pz1cm; 
+  TVector3 v3boost;                      
+
+  fKaonPhiLAB  = fRand->Uniform( -TMath::Pi(), TMath::Pi() );
+
+  costh1cm   = fRand->Uniform( -1., 1. );
+  th1cm      = TMath::ACos( costh1cm );
+  ph1cm      = fKaonPhiLAB;
+
+  p1cm       = KinDelta(M,m1,m2)/(2.0*M);
+
+  px1cm      = p1cm * TMath::Sin( th1cm ) * TMath::Cos( ph1cm );
+  py1cm      = p1cm * TMath::Sin( th1cm ) * TMath::Sin( ph1cm );
+  pz1cm      = p1cm * TMath::Cos( th1cm );
+  
+  fKplusP4->SetXYZM(px1cm,py1cm,pz1cm,m1);
+  fLambdaP4->SetXYZM(-px1cm,-py1cm,-pz1cm,m2);
+  fKplusP4->RotateZ(-fKaonPhiLAB);
+  fLambdaP4->RotateZ(-fKaonPhiLAB);
+  fBeamP4->RotateZ(-fKaonPhiLAB);
+  fReactionP4->RotateZ(-fKaonPhiLAB);
+  //	SYSTEM       FRAME      COORDINATES
+  //	Beam:	     LAB (-)	Unpr (LAB)
+  //	Reaction:    LAB       	Unpr (LAB)
+  //	Kaon:        CM	(-)	Unpr (-)
+  //	Lambda:      CM	(-)	Unpr (-)
+  //      |- Proton:  -          -
+  //	  \- Pion:    -          -
+  //	(v3Boost: - )
+
+  v3boost = fReactionP4->BoostVector();
+  fBeamP4->Boost(-v3boost);
+  //	SYSTEM       FRAME      COORDINATES
+  //	Beam:	     CM (LAB)	Unpr 
+  //	Reaction:    LAB       	Unpr
+  //	Kaon:        CM	(-)	Unpr (-)
+  //	Lambda:      CM	(-)	Unpr (-)
+  //      |- Proton:  -          -
+  //	  \- Pion:    -          -
+  //	(v3Boost: CM->LAB )
+  
+}
+
+
+// ------------------------------------------------------------------------------------------------
+
+void TrackLambda()
+{
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Int_t DecayLambda()
+{
+    // Boost into Lambda CM, polarise it, then decay it according to
+    // phase space and polarisation 
+    Float_t M  = fLambdaP4->M();
+    Float_t m1 = fPDG->GetParticle(fProtonPDG)->Mass();
+    Float_t m2 = fPDG->GetParticle(fPiminusPDG)->Mass();
+    Float_t costh1cm, th1cm, ph1cm, csx, csy, csz, r;
+    Float_t sin2phiK, cos2phiK;
+    Float_t p1cm, px1cm, py1cm, pz1cm; 
+    Float_t sigmaRed;	// Reduced cross-section
+
+    sin2phiK   = TMath::Sin( 2.0 * fKaonPhiLAB );
+    cos2phiK   = TMath::Cos( 2.0 * fKaonPhiLAB );
+
+    TVector3 v3boostLR;                      
+    v3boostLR = fLambdaP4->BoostVector();
+    fLambdaP4->Boost(-v3boostLR);
+    //	SYSTEM       FRAME      COORDINATES
+    //	Beam:	     CM 	Unpr 
+    //	Reaction:    LAB       	Unpr
+    //	Kaon:        CM		Unpr
+    //	Lambda:      LR (CM)   	Unpr
+    //    |- Proton:  -          -
+    //	  \- Pion:    -          -
+    //	(v3Boost: LR->CM *)
+
+    //	Isotropic decay in Lambda rest frame...
+//     costh1cm   = fRand->Uniform( -1., 1. );
+//     th1cm      = TMath::ACos( costh1cm );
+//     ph1cm      = fRand->Uniform( 0, TMath::TwoPi() );
+//     csx      = TMath::Sin( th1cm ) * TMath::Cos( ph1cm );
+//     csy       = TMath::Sin( th1cm ) * TMath::Sin( ph1cm );
+//     csz      = costh1cm;
+    csx = fRand->Gaus();
+    csy = fRand->Gaus();
+    csz = fRand->Gaus();
+    
+    r = TMath::Sqrt(csx*csx + csy*csy + csz*csz);   
+
+    csx /= r;
+    csy /= r;
+    csz /= r;
+
+
+    //	Check on distributions generated...
+    h2dxyPRE->Fill(csx,csy);
+    h2dyzPRE->Fill(csy,csz);
+    h2dzxPRE->Fill(csz,csx);
+
+    h2xPhiPRE->Fill(fKaonPhiLAB,csx);
+    h2yPhiPRE->Fill(fKaonPhiLAB,csy);
+    h2zPhiPRE->Fill(fKaonPhiLAB,csz);
+
+     //	Calculate reduced cross-section...
+//     sigmaRed  = 1 - fPolBeam*fPolSigma*cos2phiK;
+//     sigmaRed -= fPolAweak*csx*fPolBeam*fPolOX*sin2phiK;
+//     sigmaRed += fPolAweak*csy*fPolP;
+//     sigmaRed -= fPolAweak*csy*fPolBeam*fPolT*cos2phiK;
+//     sigmaRed -= fPolAweak*csz*fPolBeam*fPolOZ*sin2phiK;
+
+    sigmaRed  = 1 - fPolBeam*fPolSigma*cos2phiK;
+    sigmaRed -= fPolAweak*sin2phiK*fPolBeam*(csx*fPolOX+csz*fPolOZ);
+    sigmaRed += fPolAweak*csy*fPolP;
+    sigmaRed -= fPolAweak*csy*fPolBeam*fPolT*cos2phiK;
+
+    h1cs->Fill(sigmaRed);
+
+    //	Check on cross-section distributions...
+    h2sigma_x->Fill(sigmaRed,csx);
+    h2sigma_y->Fill(sigmaRed,csy);
+    h2sigma_z->Fill(sigmaRed,csz);
+
+    //	Is it worth carrying on?
+    Float_t acceptFraction = fRand->Uniform(0.0,2.0);
+    if (acceptFraction > sigmaRed) {
+	return 1;	//	Reject this event
+    }
+
+
+    //	OK. Let's carry on...
+    p1cm       = KinDelta(M,m1,m2)/(2.0*M); 
+
+    px1cm      = p1cm * csx;
+    py1cm      = p1cm * csy;
+    pz1cm      = p1cm * csz;
+  
+    fProtonP4->SetXYZM(px1cm,py1cm,pz1cm,m1);
+    fPiminusP4->SetXYZM(-px1cm,-py1cm,-pz1cm,m2);
+    //	SYSTEM       FRAME      COORDINATES
+    //	Beam:	     CM         Unpr
+    //	Reaction:    LAB       	Unpr
+    //	Kaon:        CM		Unpr
+    //	Lambda:      LR    	Unpr
+    //    |- Proton: LR (-)     Unpr (-)
+    //	  \- Pion:   LR	(-)	Unpr (-)
+    //	(v3Boost: LR->CM )
+  
+    //	Check on 4-momentum conservation...
+    TLorentzVector p4TotLR = *fProtonP4 - *fPiminusP4;
+    h1PtotXLR->Fill(p4TotLR.X());
+    h1PtotYLR->Fill(p4TotLR.Y());
+    h1PtotZLR->Fill(p4TotLR.Z());
+    h1PtotTLR->Fill(p4TotLR.T());
+
+    //	Check on distributions accepted...
+    h2dxy->Fill(csx,csy);
+    h2dyz->Fill(csy,csz);
+    h2dzx->Fill(csz,csx);
+
+    h2xPhi->Fill(fKaonPhiLAB,csx);
+    h2yPhi->Fill(fKaonPhiLAB,csy);
+    h2zPhi->Fill(fKaonPhiLAB,csz);
+
+    // Lambda Rest to CM
+//     fProtonP4->Boost(v3boostLR);
+//     fPiminusP4->Boost(v3boostLR);
+    //	SYSTEM       FRAME      COORDINATES
+    //	Beam:	     CM 	Unpr
+    //	Reaction:    LAB       	Unpr
+    //	Kaon:        CM		Unpr
+    //	Lambda:      LR    	Unpr
+    //    |- Proton: CM (LR)    Unpr
+    //	  \- Pion:   CM	(LR)	Unpr
+    //	(v3Boost: LR->CM )
+
+    //	Check on 4-momentum conservation...
+    TLorentzVector p4TotCM = *fKplusP4 + *fProtonP4 + *fPiminusP4;
+    h1PtotXCM->Fill(p4TotCM.X());
+    h1PtotYCM->Fill(p4TotCM.Y());
+    h1PtotZCM->Fill(p4TotCM.Z());
+    h1PtotTCM->Fill(p4TotCM.T()-fReactionP4->M());
+
+    // CM to lab
+    TVector3 v3boostCM;
+    v3boostCM = fReactionP4->BoostVector();
+    fKplusP4->Boost(v3boostCM);
+    fBeamP4->Boost(v3boostCM);
+    *fLambdaP4 =  *fBeamP4 + *fTargetP4 - *fKplusP4;
+
+//     fProtonP4->Boost(v3boostCM);
+//     fPiminusP4->Boost(v3boostCM);
+    //	SYSTEM       FRAME      COORDINATES
+    //	Beam:	     LAB (CM) 	Unpr
+    //	Reaction:    LAB       	Unpr
+    //	Kaon:        LAB (CM)  	Unpr
+    //	Lambda:      LR    	Unpr
+    //    |- Proton: LAB (CM)   Unpr
+    //	  \- Pion:   LAB (CM)  	Unpr
+    //	(v3Boost: CM->LAB *)
+
+    // LR to lab
+    TVector3 v3boostLL = fLambdaP4->BoostVector();
+    fProtonP4->Boost(v3boostLL);
+    fPiminusP4->Boost(v3boostLL);
+    
+    //	These two 4-momenta still need to be rotated into the lab
+    //	coordinate system...
+    fKplusP4->RotateZ(fKaonPhiLAB);
+    fProtonP4->RotateZ(fKaonPhiLAB);
+    fPiminusP4->RotateZ(fKaonPhiLAB);
+    //	SYSTEM       FRAME      COORDINATES
+    //	Beam:	     LAB  	Unpr
+    //	Reaction:    LAB       	Unpr
+    //	Kaon:        LAB   	LAB (Unpr)
+    //	Lambda:      LR    	Unpr
+    //    |- Proton: LAB    	LAB (Unpr)
+    //	  \- Pion:   LAB  	LAB (Unpr)
+    //	(v3Boost: CM->LAB *)
+
+    //	Check on 4-momentum conservation...
+    TLorentzVector p4TotLAB = *fBeamP4 + *fTargetP4 - *fKplusP4 - *fProtonP4 - *fPiminusP4;
+    h1PtotXLAB->Fill(p4TotLAB.X());
+    h1PtotYLAB->Fill(p4TotLAB.Y());
+    h1PtotZLAB->Fill(p4TotLAB.Z());
+    h1PtotTLAB->Fill(p4TotLAB.T());
+    
+
+    
+
+    return 0;
+}
+
+
+// ------------------------------------------------------------------------------------------------
+
+
+Double_t KinDelta(Double_t M, Double_t m1, Double_t m2) {
+
+    Double_t tmp = M*M*M*M + m1*m1*m1*m1 + m2*m2*m2*m2
+	- 2.0*M*M*m1*m1 - 2.0*M*M*m2*m2 - 2.0*m1*m1*m2*m2;
+
+    return TMath::Sqrt(tmp);
+} 
+
+
+// ------------------------------------------------------------------------------------------------
+
+Int_t ReadConfig(string fileName) {
+
+    //	Config file...
+    ifstream myFile(fileName.c_str(), ios::in);
+    if ( myFile.bad() ) {
+	cerr << "Error: Cannot open file " << fileName << endl;
+	return( 1 );
+    }
+
+   //	Process...
+    string buf;
+    string firstField;
+    string secondField;
+    string data;
+    double value;
+    
+    while (! myFile.eof() ) {
+	buf.clear();
+	firstField.clear();
+	secondField.clear();
+	data.clear();
+ 
+	getline( myFile, buf );
+	istringstream istr( buf );
+	istr >> firstField >> secondField >> data;	
+	
+	if ( firstField.find("#",0,1) && 	//	comment
+	     firstField.find("//",0,2) &&	//	comment
+	     isalpha((int)firstField[0]) ) {	//	junk
+	    
+	   
+	    //	 check for '<token> = <token>' format...
+	    if ( secondField.compare("=") ) {
+		cerr << "Warning: line not in correct format: " << buf << endl;
+		continue;
+	    }
+
+	    value = atof(data.c_str());
+
+	    //	Now assign the values to global variables...
+	    if ( firstField.compare("fBeamE")==0 ) {
+		fBeamE = value;
+		cout << "fBeamE = " << fBeamE << endl;
+	    }
+	    if ( firstField.compare("fPolBeam")==0 ) {
+		fPolBeam = value;
+		cout << "fPolBeam = " << fPolBeam << endl;
+	    }
+	    if ( firstField.compare("fPolAweak")==0 ) {
+		fPolAweak = value;
+		cout << "fPolAweak = " << fPolAweak << endl;
+	    }
+	    if ( firstField.compare("fPolSigma")==0 ) {
+		fPolSigma = value;
+		cout << "fPolSigma = " << fPolSigma << endl;
+	    }
+	    if ( firstField.compare("fPolP")==0 ) {
+		fPolP = value;
+		cout << "fPolP = " << fPolP << endl;
+	    }
+	    if ( firstField.compare("fPolT")==0 ) {
+		fPolT = value;
+		cout << "fPolT = " << fPolT << endl;
+	    }
+	    if ( firstField.compare("fPolOX")==0 ) {
+		fPolOX = value;
+		cout << "fPolOX = " << fPolOX << endl;
+	    }
+	    if ( firstField.compare("fPolOZ")==0 ) {
+		fPolOZ = value;
+		cout << "fPolOZ = " << fPolOZ << endl;
+	    }
+
+	}
+    }
+    
+    myFile.close();
+    return 0;
+}
+
+// ------------------------------------------------------------------------------------------------
+

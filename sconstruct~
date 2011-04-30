@@ -1,0 +1,18 @@
+from init_env import init_environment
+
+env = init_environment("root")
+
+#Include Path
+incpath = ['.']
+env.Append(CPPPATH = incpath)
+
+
+env.Append(CXXFLAGS = '-g3')
+
+env.Program('usercode', ['TUserCode.cc',
+		     'TNestedSample.cc', 
+		     'TSimpleBeamRecoil.cc'])  
+
+env.Library('usercode', ['TUserCode.cc',
+		     'TNestedSample.cc', 
+		     'TSimpleBeamRecoil.cc'])  

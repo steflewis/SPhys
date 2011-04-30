@@ -1,0 +1,9 @@
+{
+  TChain *fROOTCHain;
+  
+  fROOTChain = new TChain("tree");
+  fROOTChain->Add("BposteriorTest.root");
+
+  ULong64_t NEvents = fROOTChain->GetEntries();
+  cout << NEvents << endl;
+}
