@@ -109,9 +109,9 @@ int main(void)
     LH->UpdatedPrior();
   }
 
-  printf("About to run Iterate\n");
+  // printf("About to run Iterate\n");
   LH->Iterate();                  //Run
-  printf("Finished running Iterate\n");
+  // printf("Finished running Iterate\n");
 
   LH->FinalCorrection();          //Optional final correction
   printf("Final Correction complete\n");

@@ -33,7 +33,7 @@ TFile *PriorTree(){
 
   fclose(OrigPrior);
   Long64_t         nentries = T->GetEntries();
-
+  printf("Number of entries, Original prior: %d\n",nentries);
   TH1F            *Pr  = new TH1F("Prior",  "", 80, -1.3, 1.3           );
 
   for (Long64_t i = 0; i<nentries; i++){

@@ -34,12 +34,13 @@ TSimplePhysics::TSimplePhysics()
 //_____________________________________________________________________
 TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSample(numberOfObjects, logWidth)
 {
-  //printf("Entering constructor.\n");
+
 
   // Determine number of events:
-  //nEvents = 10113;
+
   nEvents = 0;
   string line;
+
   // Read in azimuthal angles from file:
   eventgen.open("datatest.txt");
 
@@ -49,28 +50,32 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
 
   eventgen.close();
   eventgen.clear();
-  printf("Have found number of events: %d\n",nEvents);
-  angles = new double[nEvents];
-  pol = new double[nEvents];
-  B = new float[fNSamples];
+
+  // printf("Have found number of events: %d\n",nEvents);
+
+  angles  = new double[nEvents];
+  pol     = new double[nEvents];
+  B       = new float[fNSamples];
 
   // Declare 2D arrays for x values.  
   // Essentially will be x[8][fNSamples].
-  x = new float*[8];
-  for (int i = 0; i < 8; i++){
+
+  x       = new float*[8];
+ 
+ for (int i = 0; i < 8; i++){
     x[i] = new float[fNSamples];
   }
 
   
-  //printf("Initialising arrays.\n");
+
   a_1     = new TComplex[fNSamples];
   a_2     = new TComplex[fNSamples];
   a_3     = new TComplex[fNSamples];
   a_4     = new TComplex[fNSamples];
 
-  // Declare / Initialise posterior arrays:
+  // Declare & Initialise posterior arrays:
   
-  postX = new double*[8];
+  postX      = new double*[8];
   for (int i = 0; i < 8; i++){
     postX[i] = new double[MAX_SAMPLES];
   }
@@ -85,57 +90,20 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
   post_a4_Im = new double[MAX_SAMPLES];
 
   post_B     = new float[MAX_SAMPLES];
-  //printf("About to read from file\n");
+
   
   eventgen.open("datatest.txt");
   
-  // int g = 0;
-  
-  // while(!eventgen.eof()){
-  //   eventgen >> angles[g] >> pol[g];
-  //   g++;
-  //   printf("Iteration: %d\n",g);
-  // }
 
   for(int i = 0; i<nEvents; i++){
     eventgen >> angles[i];
     eventgen >> pol[i];
-    //printf("iteration: %d\t angle: %lf\t polarisation: %lf\n",i,angles[i],pol[i]);
-  }
-  printf("Finished loop\n");
+    }
+ 
   eventgen.close();
   eventgen.clear();
-  printf("file closed\n");
-  // int j = 0;
-  // Char_t tempString[111024];
-  // while(fgets(tempString,sizeof(tempString),events)!=NULL){
-  //   if(sscanf(tempString,"%lf %lf\n", &angles[j], &pol[j] ) != 2){
-  //     fprintf(stderr, "There was a problem with the format of the file.\n");
-  //     //return 0;
-  //   }
-  //   j++;
-  // }
-  // fclose(events);
-  // int g = 0;
-  // ifstream eventfile ("angles.txt");
-  // if (eventfile.is_open()){
-  //   while(eventfile.good()){
-  //     eventfile >> angles[g];
-  //     eventfile >> pol[g];
-  //     g++;
-  //   }
-  // }
-  // eventfile.close();
 
-  // FILE *events = fopen("angles.txt","r");
-  // char buffer[11024];
-  // int g = 0;
-  //   while (fgets(&buffer, sizeof(buffer)-1, events)) {
-  //   sscanf(buffer, "%lf %lf", &angles[g], &pol[g]);
-  //   g++;
-  // }
 
-  printf("Reached initialisation of arrays pt 2\n");
 
   for(int n=0;n<fNSamples;n++){
 
@@ -144,77 +112,84 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
     a_2[n]    = TComplex(0.0,0.0);
     a_3[n]    = TComplex(0.0,0.0);
     a_4[n]    = TComplex(0.0,0.0);
-    // printf("iterate: %d\n",n);
 
   }
-  testPrior = true;
-  NewPrior = false; 
+
+  testPrior    = true;
+  NewPrior     = false; 
   fIndex       = 0;
   sampleIndex  = 0;
-  printf("Leaving Constructor\n"); 
+
 
 }
 //____________________________________________________________________
 void
 TSimplePhysics::Prior(int fIndex)
 {
+ 
   // Set samples according to prior
-  // printf("Entering Prior, %d\n",fIndex);
+  // This method will be called if no evolving prior is used. 
 
-   
-
-  rSquared = 0;
+  rSquared     = 0;
   for (int i = 0; i < 8; i++) {
+
     x[i][fIndex] = gRandom->Gaus();
-    rSquared += x[i][fIndex]*x[i][fIndex];
+    rSquared    += x[i][fIndex]*x[i][fIndex];
+
   }
-  // printf("After first loop\n");
+
   for (int i = 0; i < 8; i++) {
     x[i][fIndex] /= TMath::Sqrt(rSquared);
   }
 
-  // printf("after second loop\n");
+
   a_1[fIndex] = TComplex((Double_t)x[0][fIndex],(Double_t)x[1][fIndex]);
   a_2[fIndex] = TComplex((Double_t)x[2][fIndex],(Double_t)x[3][fIndex]);
   a_3[fIndex] = TComplex((Double_t)x[4][fIndex],(Double_t)x[5][fIndex]);
   a_4[fIndex] = TComplex((Double_t)x[6][fIndex],(Double_t)x[7][fIndex]);
-  // printf("set complex numbers\n");
 
-  // printf("test of rho thing: %lf\n",a_1[fIndex].Rho2());
-  B[fIndex] = (a_1[fIndex].Rho2()) + (a_2[fIndex].Rho2()) - (a_3[fIndex].Rho2()) - (a_4[fIndex].Rho2());
-  // printf("found B, about to find log l\n");
+
+
+  B[fIndex]   = (a_1[fIndex].Rho2()) 
+              + (a_2[fIndex].Rho2()) 
+              - (a_3[fIndex].Rho2()) 
+              - (a_4[fIndex].Rho2());
+
   fLogL[fIndex] = LogLhood(B[fIndex]);
-  // printf("B: %lf\t LogL: %lf\n",B[fIndex],fLogL[fIndex]);
 
-  if (testPrior == true){
-    ofstream oldprior;
-    if (fIndex == 0){
-      oldprior.open("oldprior.txt");
-      cout << "Outputting initial prior text file" << endl;
-    }
-    else {
-      oldprior.open("oldprior.txt",ios::app);
-    }
-    oldprior << B[fIndex];
-    // oldprior << " ";
-    // oldprior << fLogL[fIndex];
-    oldprior << "\n";
+  
 
-    oldprior.close();
+  ofstream oldprior;
+  if (fIndex == 0){
+    oldprior.open("oldprior.txt");
+    //    cout << "Outputting initial prior text file" << endl;
   }
 
+  else {
+    oldprior.open("oldprior.txt",ios::app);
+  }
+
+  oldprior << B[fIndex];
+  // oldprior << " ";
+  // oldprior << fLogL[fIndex];
+  oldprior << "\n";
+
+  oldprior.close();
    
 }
 //____________________________________________________________________
 void
 TSimplePhysics::UpdatedPrior()
 {
-  TRandom *gen = new TRandom();
+
+  // This will be called when using previous posterior to generate prior.
+
+  TRandom *gen  = new TRandom();
   Double_t pick = 0;
 
-  TFile prior("BposteriorTest.root");
+  TFile    prior("BposteriorTest.root");
 
-  TTree *tree = (TTree*)gDirectory->Get("tree");
+  TTree   *tree = (TTree*)gDirectory->Get("tree");
 
   Double_t a1_Re;
   Double_t a1_Im;
@@ -241,117 +216,118 @@ TSimplePhysics::UpdatedPrior()
   tree->SetBranchAddress("logL",&logL_tree);
   tree->SetBranchAddress("logWt",&logWt);
     
-  Long64_t nentries = tree->GetEntries();
-  cout << "No entries: \t" << nentries << endl;
+  Long64_t nentries    = tree->GetEntries();
+  Double_t sumweights  =  0;       // 03/05/2011 - Changed from Float_t to Double_t
+  Double_t maxLogWt    = -10000;   // ''
 
-  Float_t sumweights = 0;
-  Float_t maxLogWt =-10000;
-  for (Long64_t i=0; i<nentries;i++) 
-    {
-      tree->GetEntry(i);
-      if (logWt > maxLogWt)
-	maxLogWt = logWt;
-    }
-
+  for (Long64_t i=0; i<nentries;i++) {
     
-  for (Long64_t i = 0; i < nentries; i++){
     tree->GetEntry(i);
-    // if (i > (nentries - 20)){
-    //   if(logWt != 0)cout << logWt <<" I AM LOGWT \t"<<"minLogWt: "<<maxLogWt<< endl;
-    //   if(sumweights != 0)cout<<" I AM SUMWEIGHTS "<<sumweights<<endl;
-    //   cout << "What to exp: " << TMath::Exp(logWt + TMath::Abs(maxLogWt)) << endl;
-    // }
-
-    // sumweights += TMath::Exp((logWt+TMath::Abs(minLogWt))/1000000);
-    sumweights += TMath::Exp(logWt + TMath::Abs(maxLogWt));
-
-
+    if (logWt > maxLogWt){
+      maxLogWt = logWt;
+    }
   }
-  cout << "Sumweights: " << sumweights << endl;  
+
+  Double_t  addedVal = TMath::Abs(maxLogWt);
+  
+  for (Long64_t i = 0; i < nentries; i++){
+ 
+    tree->GetEntry(i);
+    sumweights += TMath::Exp(logWt + addedVal);
+ 
+  }
+   
     
   // Main event loop:
   // Pick random number between 0 and sumweights...
     
   Double_t runningsum = 0;
-  bool     exitloop = false;
-  Double_t nu;
+  bool     exitloop   = false;
+  Double_t logNu;
   Double_t threshold;
+  Double_t stairHeight;
+  Double_t old_floor;
+  Double_t new_floor;
+  
+  logNu     = log(fNSamples);
+  threshold = -maxLogWt;
+  
+  // Threshold comes from equation:
+  // nu <= 1/maxweights
+  // Need to use similar log expression.
 
-
-  for (int j = 0; j < fNSamples; j++){
-      
-    // This is incorrect XXX  See first eqn on 198 (sivia)
-
-    /************************************
-Need pick = Uniform(0,1)
-nu is number of samples in sequence
-nu <= 1/max(weights)
-StairHeight = pick + nu*sumweights
-
-     ************************************/
-    pick = gen->Uniform(0.0,1.0);
-
-    nu = fNSamples;
-    threshold = 1/(TMath::Exp(maxLogWt));
-    printf("Threshold: %lf\n",maxLogWt);
-    //This value is too small.... equals zero essentially.  Need to fix.
+    if (logNu > threshold){
+      printf("Too many samples! Quit program now.\n");
+    }
+    else {
+      for (int j = 0; j < fNSamples; j++){
+      	pick = gen->Uniform(0.0,1.0);
    
-    runningsum = 0;
-    
-    for (Long64_t i = 0; i < nentries; i++){
-      // Get the current entry in the tree
-      tree->GetEntry(i);
-      // runningsum used as a threshold value 
-      runningsum += TMath::Exp(logWt+TMath::Abs(maxLogWt));
+ 
+	runningsum         = 0;
+	old_floor          = 0;
+	new_floor          = 0;
 
-      
-      if (runningsum > pick){
-	// Assign values from the corresponding entry in tree 'tree'
-	// where values in tree are priors and x's are used to calculate
-	// posterior values
-	x[0][j] = a1_Re;
-	x[1][j] = a1_Im;
-	x[2][j] = a2_Re;
-	x[3][j] = a2_Im;
-	x[4][j] = a3_Re;
-	x[5][j] = a3_Im;
-	x[6][j] = a4_Re;
-	x[7][j] = a4_Im;
-	break;
-	
+	for (Long64_t i = 0; i < nentries; i++){
+
+	  // Get the current entry in the tree
+	  tree->GetEntry(i);
+
+	  runningsum += TMath::Exp(logWt+addedVal);
+	  stairHeight = pick + fNSamples*runningsum;
+	  new_floor   = floor(stairHeight);
+	  
+	  if (new_floor > old_floor){
+	   
+	    // Use entry i - first time an integer was exceeded.
+	   
+
+	    x[0][j] = a1_Re;
+	    x[1][j] = a1_Im;
+	    x[2][j] = a2_Re;
+	    x[3][j] = a2_Im;
+	    x[4][j] = a3_Re;
+	    x[5][j] = a3_Im;
+	    x[6][j] = a4_Re;
+	    x[7][j] = a4_Im;
+	    break;
+	    
+	  }
+	  else {
+	    old_floor = new_floor;
+	  }
+	}
+    
+	// Calcuate the 'B' observable from Dave's 'spin observables' paper
+	a_1[j] = TComplex((Double_t)x[0][j],(Double_t)x[1][j]);
+	a_2[j] = TComplex((Double_t)x[2][j],(Double_t)x[3][j]);
+	a_3[j] = TComplex((Double_t)x[4][j],(Double_t)x[5][j]);
+	a_4[j] = TComplex((Double_t)x[6][j],(Double_t)x[7][j]);
+
+	B[j] = a_1[j].Rho2() 
+	     + a_2[j].Rho2() 
+             - a_3[j].Rho2() 
+             - a_4[j].Rho2();
+
+	fLogL[j] = LogLhood(B[j]);
       }
+  
+     
+      ofstream UPrior;
+      
+      UPrior.open("newBvals-1.txt");
+      
+      for (int j = 0; j < fNSamples; j++) {
+	UPrior << B[j];
+	// UPrior << " ";
+	// UPrior << fLogL[j];
+	UPrior << "\n";
+      }
+      UPrior.close();
+      
+      
     }
-    
-    // Calcuate the 'B' observable from Dave's 'spin observables' paper
-    a_1[j] = TComplex((Double_t)x[0][j],(Double_t)x[1][j]);
-    a_2[j] = TComplex((Double_t)x[2][j],(Double_t)x[3][j]);
-    a_3[j] = TComplex((Double_t)x[4][j],(Double_t)x[5][j]);
-    a_4[j] = TComplex((Double_t)x[6][j],(Double_t)x[7][j]);
-
-    B[j] = a_1[j].Rho2() + 
-           a_2[j].Rho2() - 
-           a_3[j].Rho2() - 
-           a_4[j].Rho2();
-
-    fLogL[j] = LogLhood(B[j]);
-  }
-
-  if (testPrior == true){
-    ofstream UPrior;
-    
-    UPrior.open("newBvals-1.txt");
-    
-    for (int j = 0; j < fNSamples; j++) {
-      UPrior << B[j];
-      // UPrior << " ";
-      // UPrior << fLogL[j];
-      UPrior << "\n";
-    }
-    UPrior.close();
-  }
-
 }
-
 //____________________________________________________________________
 double
 TSimplePhysics::LogLhood (float B)
@@ -368,7 +344,7 @@ TSimplePhysics::LogLhood (float B)
 
     // Calculate A_tilde for each angle
     A_tilde = ( (P_gamma*B*cos(2*angles[i])) + delta_L ) 
-              / ( 1 + (P_gamma*B*cos(2*angles[i])*delta_L) );
+      / ( 1 + (P_gamma*B*cos(2*angles[i])*delta_L) );
     // printf("A_tilde: %lf\n",A_tilde);
   
     // Polarisation of 0 corresponds to PERP
@@ -481,9 +457,9 @@ void TSimplePhysics::PrintSummary(char fPost[])
 {
   
   //Print values to screen
-  printf("double max: %g\n",                   DBL_MAX                     );
+  // printf("double max: %g\n",                   DBL_MAX                     );
   printf("Number of objects: %d\n",            fNSamples                   );
-  printf("Log width: %g\n",                    fLogW                       );
+  // printf("Log width: %g\n",                    fLogW                       );
   printf("Information H: %g\n",                fH                          );
   printf("H with final correction: %g\n",      fHFC                        );
   printf("Log(Z): %g +/- %g\n",                fLogZ, sqrt(fH/fNSamples)   );
@@ -538,7 +514,7 @@ void TSimplePhysics::PrintSummary(char fPost[])
   TFile hfile("BposteriorTest.root","RECREATE");
   TTree tree("tree", "Beam recoil posterior");
 
-  printf("Have recreated file.\n");
+  // printf("Have recreated file.\n");
 
   Double_t a1_Re;
   Double_t a1_Im;
@@ -579,9 +555,9 @@ void TSimplePhysics::PrintSummary(char fPost[])
     
     tree.Fill();
   }
-  printf("Have filled tree.\n");
+  // printf("Have filled tree.\n");
   tree.Write();
-  printf("Root tree file written.\n");
+  // printf("Root tree file written.\n");
 }
 //____________________________________________________________________
 

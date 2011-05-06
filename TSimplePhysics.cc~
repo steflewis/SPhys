@@ -244,8 +244,8 @@ TSimplePhysics::UpdatedPrior()
   Long64_t nentries = tree->GetEntries();
   cout << "No entries: \t" << nentries << endl;
 
-  Float_t sumweights = 0;
-  Float_t maxLogWt =-10000;
+  Double_t sumweights = 0;     // 03/05/2011 - Changed from Float_t to Double_t
+  Double_t maxLogWt =-10000;   // ''
   for (Long64_t i=0; i<nentries;i++) 
     {
       tree->GetEntry(i);
@@ -253,7 +253,8 @@ TSimplePhysics::UpdatedPrior()
 	maxLogWt = logWt;
     }
 
-    
+  Double_t  addedVal = TMath::Abs(maxLogWt);
+  printf("Added Value: %lf\n",addedVal);
   for (Long64_t i = 0; i < nentries; i++){
     tree->GetEntry(i);
     // if (i > (nentries - 20)){
@@ -263,17 +264,31 @@ TSimplePhysics::UpdatedPrior()
     // }
 
     // sumweights += TMath::Exp((logWt+TMath::Abs(minLogWt))/1000000);
-    sumweights += TMath::Exp(logWt + TMath::Abs(maxLogWt));
-
+     // sumweights += TMath::Exp(logWt + TMath::Abs(maxLogWt));
+    sumweights += TMath::Exp(logWt + addedVal);
+    /////// THIS STILL ISN'T WORKING!!!!! FIX!!!
 
   }
-  cout << "Sumweights: " << sumweights << endl;  
+  printf("Sum weights before divide: %lf\n",sumweights);
+  // sumweights = sumweights / TMath::Exp(addedVal);
+  // cout << "Sumweights: " << sumweights << endl;  
     
   // Main event loop:
   // Pick random number between 0 and sumweights...
     
   Double_t runningsum = 0;
   bool     exitloop = false;
+  Double_t logNu;
+  Double_t threshold;
+  Double_t stairHeight;
+    logNu = log(fNSamples);
+    threshold = -maxLogWt;
+   
+    if (logNu > threshold){
+      printf("Too many samples! Quit program now.\n");
+      
+    }
+    else {
 
   for (int j = 0; j < fNSamples; j++){
       
@@ -285,8 +300,23 @@ nu is number of samples in sequence
 nu <= 1/max(weights)
 StairHeight = pick + nu*sumweights
 
+
+READ SECTION OF SIVIA!!!
      ************************************/
-    pick = gen->Uniform(0.0,sumweights);
+    pick = gen->Uniform(0.0,1.0);
+    stairHeight = pick + fNSamples*sumweights;
+    if ( (j%1000)==0){
+      printf("Stair height: %lf\n",stairHeight); 
+    }
+    // printf("LogNu: %lf\n",logNu);
+
+    // Threshold comes from equation:
+    // nu <= 1/maxweights
+    // Need to use similar log expression.
+
+
+    // printf("Threshold: %lf\n",threshold);
+ 
     runningsum = 0;
     
     for (Long64_t i = 0; i < nentries; i++){
@@ -296,7 +326,7 @@ StairHeight = pick + nu*sumweights
       runningsum += TMath::Exp(logWt+TMath::Abs(maxLogWt));
 
       
-      if (runningsum > pick){
+      if (runningsum > stairHeight){
 	// Assign values from the corresponding entry in tree 'tree'
 	// where values in tree are priors and x's are used to calculate
 	// posterior values
@@ -325,24 +355,24 @@ StairHeight = pick + nu*sumweights
            a_4[j].Rho2();
 
     fLogL[j] = LogLhood(B[j]);
-  }
-
-  if (testPrior == true){
-    ofstream UPrior;
-    
-    UPrior.open("newBvals-1.txt");
-    
-    for (int j = 0; j < fNSamples; j++) {
-      UPrior << B[j];
-      // UPrior << " ";
-      // UPrior << fLogL[j];
-      UPrior << "\n";
     }
-    UPrior.close();
-  }
-
+  
+    if (testPrior == true){
+      ofstream UPrior;
+    
+      UPrior.open("newBvals-1.txt");
+    
+      for (int j = 0; j < fNSamples; j++) {
+	UPrior << B[j];
+	// UPrior << " ";
+	// UPrior << fLogL[j];
+	UPrior << "\n";
+      }
+      UPrior.close();
+    }
+  
+    }
 }
-
 //____________________________________________________________________
 double
 TSimplePhysics::LogLhood (float B)
