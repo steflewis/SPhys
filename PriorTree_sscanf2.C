@@ -36,7 +36,7 @@ Stefanie Lewis
 Int_t    nevents_old = 0;
 Int_t    nevents_new1 = 0;
 
-Double_t *oldB, *newB1;
+Double_t *oldB, *newB1, *oldLogL;
 
 int main(){
 
@@ -62,9 +62,9 @@ int main(){
 
   // Declare histograms
 
-  TH1F *oldP = new TH1F("oldP", "Initial Prior", 100, -1.1, 1.1);
-  TH1F *newP = new TH1F("newP", "Evolved Prior", 100, -1.1, 1.1);
-  
+  TH1F *oldP  = new TH1F("oldP" , "Initial Prior" , 100, -1.1, 1.1);
+  TH1F *newP  = new TH1F("newP" , "Evolved Prior" , 100, -1.1, 1.1);
+  TH2F *B_Log = new TH2F("B_Log", "LogL against B", 100, -1.1, 1.1, 100, -10, 10);
   
  again:
  
@@ -86,14 +86,15 @@ int main(){
 	entries_old++;
 	continue;
       }
-    if( (sscanf(buffer,"%lf", &oldB[count_old]) != 1) ){
+    if( (sscanf(buffer,"%lf", &oldB[count_old], &oldLogL[count_old]) != 2) ){
       printf("Found an error in the data file!\n"); 
       return 2;
     }
    
 
     oldP->Fill(oldB[count_old]);
-
+    B_Log->Fill(oldLogL[count_old], oldB[count_old]);
+    
   }
   fclose(priorfile);
 
@@ -101,7 +102,8 @@ int main(){
   if(entries_old > nevents_old){
     nevents_old = entries_old;
     if(
-       (oldB = (Double_t *) calloc(nevents_old, sizeof(Int_t))) == NULL){
+       (oldB = (Double_t *) calloc(nevents_old, sizeof(Int_t)))
+       || (oldLogL = (Double_t *) calloc(nevents_old, sizeof(Int_t))) == NULL){
       printf("Couldn't allocate the necessary memory 00!\n");
       return 3;
     }	
@@ -164,14 +166,31 @@ int main(){
   newP->GetXaxis()->SetTitle("B");
   newP->SetLineColor(kBlue);
   oldP->SetLineColor(kRed);
-  newP->Draw();
+  //newP->Draw();
 
-  oldP->Draw("SAME");
+  oldP->Draw();
 
   
 
   priors->Print("evolving_prior.eps");
  
+  TCanvas *likelihood = new TCanvas("LIKELIHOOD","likelihood");
+  likelihood->SetFillStyle(0);
+  likelihood->SetFillColor(0);
+  likelihood->SetFrameFillStyle(0);
+
+  
+  likelihood->cd(1);
+  B_Log->GetXaxis()->SetTitle("B");
+  B_Log->GetYaxis()->SetTitle("LogL");
+  //  newP->SetLineColor(kBlue);
+  //  oldP->SetLineColor(kRed);
+  //newP->Draw();
+
+  B_Log->Draw();
+
+
+
   return 0;
 }
     

@@ -170,8 +170,8 @@ TSimplePhysics::Prior(int fIndex)
   }
 
   oldprior << B[fIndex];
-  // oldprior << " ";
-  // oldprior << fLogL[fIndex];
+  oldprior << " ";
+  oldprior << fLogL[fIndex];
   oldprior << "\n";
 
   oldprior.close();
@@ -216,9 +216,9 @@ TSimplePhysics::UpdatedPrior()
   tree->SetBranchAddress("logL",&logL_tree);
   tree->SetBranchAddress("logWt",&logWt);
     
-  Long64_t nentries    = tree->GetEntries();
-  Double_t sumweights  =  0;       // 03/05/2011 - Changed from Float_t to Double_t
-  Double_t maxLogWt    = -10000;   // ''
+  Long64_t  nentries    = tree->GetEntries();
+  Double_t  sumweights  =  0;       // 03/05/2011 - Changed from Float_t to Double_t
+  Double_t  maxLogWt    = -10000;   // ''
 
   for (Long64_t i=0; i<nentries;i++) {
     
@@ -228,7 +228,7 @@ TSimplePhysics::UpdatedPrior()
     }
   }
 
-  Double_t  addedVal = TMath::Abs(maxLogWt);
+  Double_t  addedVal    = TMath::Abs(maxLogWt);
   
   for (Long64_t i = 0; i < nentries; i++){
  
@@ -257,9 +257,13 @@ TSimplePhysics::UpdatedPrior()
   // Need to use similar log expression.
 
     if (logNu > threshold){
+
       printf("Too many samples! Quit program now.\n");
+
     }
+
     else {
+ 
       for (int j = 0; j < fNSamples; j++){
       	pick = gen->Uniform(0.0,1.0);
    
@@ -282,14 +286,14 @@ TSimplePhysics::UpdatedPrior()
 	    // Use entry i - first time an integer was exceeded.
 	   
 
-	    x[0][j] = a1_Re;
-	    x[1][j] = a1_Im;
-	    x[2][j] = a2_Re;
-	    x[3][j] = a2_Im;
-	    x[4][j] = a3_Re;
-	    x[5][j] = a3_Im;
-	    x[6][j] = a4_Re;
-	    x[7][j] = a4_Im;
+	    x[0][j]   = a1_Re;
+	    x[1][j]   = a1_Im;
+	    x[2][j]   = a2_Re;
+	    x[3][j]   = a2_Im;
+	    x[4][j]   = a3_Re;
+	    x[5][j]   = a3_Im;
+	    x[6][j]   = a4_Re;
+	    x[7][j]   = a4_Im;
 	    break;
 	    
 	  }
@@ -323,6 +327,7 @@ TSimplePhysics::UpdatedPrior()
 	// UPrior << fLogL[j];
 	UPrior << "\n";
       }
+
       UPrior.close();
       
       

@@ -61,7 +61,7 @@ double logWidth = log(1.0 - exp(-1.0 / noSamples));
 int testing = 0;   //Change to 1 when testing.
 int verbose = 1;
 
-bool Updated = true;  // Set to true if using previous posterior 
+bool Updated = false;  // Set to true if using previous posterior 
                        // to generate new prior.
 
 
