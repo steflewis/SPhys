@@ -9,11 +9,10 @@
 //
 //      Description:     See TSimplePhysics.h
 //  
-//      Author: Dave Ireland <d.ireland@physics.gla.ac.uk>
-//      edited by Stefanie Lewis <s.lewis@physics.gla.ac.uk>
-//      Update: 2011-01-017 15:36:46z
+//      Author: Stefanie Lewis <s.lewis@physics.gla.ac.uk>
+//      Update: 2011-05-19 15:36:46z
 //
-//      Copyright: 2007 (C) Dave Ireland
+//      Copyright: 2011 Stefanie Lewis
 //
 //      $Id$ 
 //
@@ -119,7 +118,7 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
   NewPrior     = false; 
   fIndex       = 0;
   sampleIndex  = 0;
-
+  Log2e        = log2(TMath::E());
 
 }
 //____________________________________________________________________
@@ -242,7 +241,6 @@ TSimplePhysics::UpdatedPrior()
   // Pick random number between 0 and sumweights...
     
   Double_t runningsum = 0;
-  bool     exitloop   = false;
   Double_t logNu;
   Double_t threshold;
   Double_t stairHeight;
@@ -338,42 +336,41 @@ double
 TSimplePhysics::LogLhood (float B)
 {
   // logLikelihood function
-  P_gamma = 1;
-  delta_L = 0;
-  double LogL   = 0;
-  
-  double prob = 0;   // Probability
+  P_gamma         = 0.8;
+  delta_L         = 0;
+  double LogL     = 0.0;
+  double costerm  = 0.0;
+  double prob     = 0.0;   // Probability
   double A_tilde;
+  double localpol = 0.0;
+
+  // For use of log base 2:
+  double LogL_2   = 0.0;
+
 
   for (int i = 0; i < nEvents; i++){
 
+    costerm = P_gamma*B*cos(2*angles[i]);
+    localpol = pol[i];
+
     // Calculate A_tilde for each angle
-    A_tilde = ( (P_gamma*B*cos(2*angles[i])) + delta_L ) 
-      / ( 1 + (P_gamma*B*cos(2*angles[i])*delta_L) );
-    // printf("A_tilde: %lf\n",A_tilde);
+    A_tilde = ( costerm + delta_L )  / ( 1 + (costerm*delta_L) ) ;
   
     // Polarisation of 0 corresponds to PERP
-    if ( pol[i] < 0 ){
-      // printf("a-tilde: %lf\n",A_tilde);
-      prob = 0.5*(1 + A_tilde);
-      // printf("prob: %lf\n",prob);
+    if ( localpol < 0 ){
+        prob = 0.5*(1 + A_tilde);
     }
 
     // Polarisation of 1 corresponds to PARA
-    else if ( pol[i] >= 0 ){
-      // printf("a-tilde (para): %lf\n",A_tilde);
+    else if ( localpol >= 0 ){
       prob = 0.5*(1 - A_tilde);
-      // printf("prob (para): %lf\n",prob);
     }
     
-    LogL += log(prob);
-    // if (i < 20){
-    //   printf("Prob: %lf\n",prob);
-    //   printf("Log(prob): %lf\n",log(prob));
-    //   printf("LogL: %lf\n",LogL);
-    // }
+    LogL_2 += log2(prob);
+
+ 
   }
-  // printf("In logLhood fn: %lf\n",LogL);
+  LogL = LogL_2 / Log2e;
   return LogL;
 
 }
@@ -383,23 +380,23 @@ void
 TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
 {       
   // Evolve object within likelihood constraint
-  double step;
-  double fwhm        = 0.1;
-  double sig;
-  int    accept      = 0;
-  int    reject      = 0;
+  double   step;
+  double   fwhm           = 0.1;           // Full width half maximum
+  double   sig;                         // Sigma - to be used in random from Gaussian
+  int      accept         = 0;
+  int      reject         = 0;
   
-  double trialB;  
-  double trialLogL;
-  float trialx[8];
-  float trial_rSquared = 0;
+  double   trialB;  
+  double   trialLogL;
+  float    trialx[8];
+  float    trial_rSquared = 0;
 
   TComplex trial_a1;
   TComplex trial_a2;
   TComplex trial_a3;
   TComplex trial_a4;
 
-  int    m           = 20;
+  int      m              = 20;
 
 
   for( ; m > 0; m--)
@@ -462,30 +459,15 @@ void TSimplePhysics::PrintSummary(char fPost[])
 {
   
   //Print values to screen
-  // printf("double max: %g\n",                   DBL_MAX                     );
   printf("Number of objects: %d\n",            fNSamples                   );
-  // printf("Log width: %g\n",                    fLogW                       );
   printf("Information H: %g\n",                fH                          );
   printf("H with final correction: %g\n",      fHFC                        );
   printf("Log(Z): %g +/- %g\n",                fLogZ, sqrt(fH/fNSamples)   );
   printf("Log(Z) with final correction: %g\n", fLogZFC                     );
   printf("Number of iterates: %d\n",           fNoIterates                 );
 
+  /*
  
-  //Print posterior results to a file
-
-  // fNewPrior.open ("newprior.txt");
-  // for (int w = 0; w < fNoIterates; w++){
-  //   for (int q = 0; q < 8; q++){
-  //     fNewPrior << postX[q][w];
-  //     fNewPrior << " ";
-  //   }
-  //   fNewPrior << "\n";
-
-
-  // }
-  // fNewPrior.close();
-
   fPosterior.open ("test2.txt");
 
   for (int z = 0; z < fNoIterates; z++)
@@ -515,11 +497,13 @@ void TSimplePhysics::PrintSummary(char fPost[])
     }      
   fPosterior.close();
   printf("Posterior File created.\n");
-  
-  TFile hfile("BposteriorTest.root","RECREATE");
-  TTree tree("tree", "Beam recoil posterior");
+  */
 
-  // printf("Have recreated file.\n");
+  // Output posterior to ROOT file
+
+  TFile    hfile("BposteriorTest.root","RECREATE");
+  TTree    tree("tree", "Beam recoil posterior");
+
 
   Double_t a1_Re;
   Double_t a1_Im;
@@ -544,7 +528,7 @@ void TSimplePhysics::PrintSummary(char fPost[])
   tree.Branch("B_obs",&B_obs,"B_obs/D");
   tree.Branch("logL",&logL,"logL/D");
   tree.Branch("logWt",&logWt,"logWt/D");
-  printf("Have declared branches.\n");
+
   for (int r = 0; r < fNoIterates; r++){
     a1_Re = post_a1_Re[r];
     a1_Im = post_a1_Im[r];
@@ -560,9 +544,8 @@ void TSimplePhysics::PrintSummary(char fPost[])
     
     tree.Fill();
   }
-  // printf("Have filled tree.\n");
+
   tree.Write();
-  // printf("Root tree file written.\n");
 }
 //____________________________________________________________________
 

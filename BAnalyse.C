@@ -53,7 +53,7 @@
    Double_t         maxLogWt = -100000;
  
    TH2F            *a1  = new TH2F("a1",  "", 200, -1, 1,  200, -1, 1);
-   TH1F            *h1  = new TH1F("h1",  "", 200, -1.5, 1.5           );
+   TH1F            *h1  = new TH1F("h1",  "", 200, -1, 1             );
    // TH1F            *h2  = new TH1F("h2",  "", 100, 0, 2            );
 
  

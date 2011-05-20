@@ -84,9 +84,10 @@ public:
   TComplex *a_3;  // method.  I.e. can alter the complex amplitudes to determine
   TComplex *a_4;  // new (slightly changed) value of B.
   
-  float     *B;          // array[nSamples] holding prior values of B
+  float    *B;          // array[nSamples] holding prior values of B
 
-  
+  double    Log2e;
+
   // LogLhood() Variables:
   ifstream  eventgen;   // File containing azimuthal angles for each event
   ifstream  newprior;   // File to read in new prior information.
@@ -101,9 +102,9 @@ public:
   int       nEvents;    // Number of events.
   
   FILE      *events;
-  bool       NewPrior;   // Set to true if using updated prior frrom posterior
+  bool      NewPrior;   // Set to true if using updated prior frrom posterior
 
-  bool       testPrior;
+  bool      testPrior;
 
   //Explore() Variables:
   // I don't know what will be required here yet.
