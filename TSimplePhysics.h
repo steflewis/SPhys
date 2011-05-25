@@ -87,6 +87,7 @@ public:
   float    *B;          // array[nSamples] holding prior values of B
 
   double    Log2e;
+  double    fwhm_to_sig;   // Constant conversion factor between FWHM and std dev.
 
   // LogLhood() Variables:
   ifstream  eventgen;   // File containing azimuthal angles for each event

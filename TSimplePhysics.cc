@@ -10,7 +10,7 @@
 //      Description:     See TSimplePhysics.h
 //  
 //      Author: Stefanie Lewis <s.lewis@physics.gla.ac.uk>
-//      Update: 2011-05-19 15:36:46z
+//      Update: 2011-05-24 15:36:46z
 //
 //      Copyright: 2011 Stefanie Lewis
 //
@@ -36,9 +36,8 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
 
 
   // Determine number of events:
-
-  nEvents = 0;
   string line;
+  nEvents = 0;
 
   // Read in azimuthal angles from file:
   eventgen.open("datatest.txt");
@@ -119,6 +118,7 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
   fIndex       = 0;
   sampleIndex  = 0;
   Log2e        = log2(TMath::E());
+  fwhm_to_sig  = 2*( TMath::Sqrt( 2*log(2) ) );
 
 }
 //____________________________________________________________________
@@ -402,7 +402,7 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
   for( ; m > 0; m--)
     {
 
-      sig = fwhm / ( 2*( TMath::Sqrt( 2*log(2) ) ) );
+      sig = fwhm / fwhm_to_sig;
 
       for (int i = 0; i < 8; i++){
 	step = gRandom->Gaus(0,sig);

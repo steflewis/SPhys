@@ -7,7 +7,7 @@ incpath = ['.']
 env.Append(CPPPATH = incpath)
 
 
-env.Append(CXXFLAGS = '-g3')
+env.Append(CXXFLAGS = ['-g3','-O3'])
 
 env.Program('usercode', ['TUserCode.cc',
 		     'TNestedSample.cc', 
