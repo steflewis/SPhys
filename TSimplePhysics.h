@@ -55,7 +55,7 @@ public:
   void     UpdatedPrior();
 
   // logLikelihood function
-  double   LogLhood (float B);
+  double   LogLhood (double B, double Pg);
         
   // Evolve object within likelihood constraint
   void     Explore (double logLstar, int sampleIndex);
@@ -71,12 +71,12 @@ public:
   // double   *v;        // Uniform prior parameter for y
 
   // Variables required for Prior():
-  float    **x;          // Hold random numbers - will be array[8] where each 
+  double  **x;          // Hold random numbers - will be array[8] where each 
                          // are re-defined for each value of B (i.e. each
                          // sample).
 
 
-  float     rSquared;   // distance squared
+  double    rSquared;   // distance squared
   
 
   TComplex *a_1;  // Complex variables - there are 4 complex amplitudes. 
@@ -84,7 +84,7 @@ public:
   TComplex *a_3;  // method.  I.e. can alter the complex amplitudes to determine
   TComplex *a_4;  // new (slightly changed) value of B.
   
-  float    *B;          // array[nSamples] holding prior values of B
+  double   *B;          // array[nSamples] holding prior values of B
 
   double    Log2e;
 
@@ -93,8 +93,7 @@ public:
   ifstream  newprior;   // File to read in new prior information.
   double   *angles;     // Extracted angles from file, will be array[nEvents]
   double   *pol;        // Array of polarisation states (-1 or 1) also extracted
-  double    P_gamma;     // Initially will be single value, later will be array.
-                        // P_gamma is the photon polarisation number
+  double   *P_gamma;    // Beam polarisation
 
   double    delta_L;     // Luminosity asymmetry (essentially). Initially will be 
                         // kept as 0 but will eventually be an array?
@@ -123,7 +122,8 @@ public:
 
   double   **postX;
 
-  float   *post_B;
+  double   *post_B;
+  double   *post_Pgam;
 
   ofstream  fPosterior;    //saves posterior results (fSamples)
   ofstream  fNewPrior;     //To use results as new Prior function.

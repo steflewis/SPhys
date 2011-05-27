@@ -54,15 +54,16 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
 
   angles  = new double[nEvents];
   pol     = new double[nEvents];
-  B       = new float[fNSamples];
+  B       = new double[fNSamples];
+  P_gamma = new double[fNSamples];
 
   // Declare 2D arrays for x values.  
   // Essentially will be x[8][fNSamples].
 
-  x       = new float*[8];
+  x       = new double*[8];
  
  for (int i = 0; i < 8; i++){
-    x[i] = new float[fNSamples];
+    x[i] = new double[fNSamples];
   }
 
   
@@ -88,7 +89,8 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
   post_a4_Re = new double[MAX_SAMPLES];
   post_a4_Im = new double[MAX_SAMPLES];
 
-  post_B     = new float[MAX_SAMPLES];
+  post_B     = new double[MAX_SAMPLES];
+  post_Pgam  = new double[MAX_SAMPLES];
 
   
   eventgen.open("datatest.txt");
@@ -106,11 +108,13 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
 
   for(int n=0;n<fNSamples;n++){
 
-    B[n]      = 0.0;
-    a_1[n]    = TComplex(0.0,0.0);
-    a_2[n]    = TComplex(0.0,0.0);
-    a_3[n]    = TComplex(0.0,0.0);
-    a_4[n]    = TComplex(0.0,0.0);
+    B[n]       = 0.0;
+    a_1[n]     = TComplex(0.0,0.0);
+    a_2[n]     = TComplex(0.0,0.0);
+    a_3[n]     = TComplex(0.0,0.0);
+    a_4[n]     = TComplex(0.0,0.0);
+
+    P_gamma[n] = 0.0;
 
   }
 
@@ -142,11 +146,15 @@ TSimplePhysics::Prior(int fIndex)
   }
 
 
-  a_1[fIndex] = TComplex((Double_t)x[0][fIndex],(Double_t)x[1][fIndex]);
-  a_2[fIndex] = TComplex((Double_t)x[2][fIndex],(Double_t)x[3][fIndex]);
-  a_3[fIndex] = TComplex((Double_t)x[4][fIndex],(Double_t)x[5][fIndex]);
-  a_4[fIndex] = TComplex((Double_t)x[6][fIndex],(Double_t)x[7][fIndex]);
+  // a_1[fIndex] = TComplex((Double_t)x[0][fIndex],(Double_t)x[1][fIndex]);
+  // a_2[fIndex] = TComplex((Double_t)x[2][fIndex],(Double_t)x[3][fIndex]);
+  // a_3[fIndex] = TComplex((Double_t)x[4][fIndex],(Double_t)x[5][fIndex]);
+  // a_4[fIndex] = TComplex((Double_t)x[6][fIndex],(Double_t)x[7][fIndex]);
 
+  a_1[fIndex] = TComplex(x[0][fIndex],x[1][fIndex]);
+  a_2[fIndex] = TComplex(x[2][fIndex],x[3][fIndex]);
+  a_3[fIndex] = TComplex(x[4][fIndex],x[5][fIndex]);
+  a_4[fIndex] = TComplex(x[6][fIndex],x[7][fIndex]);
 
 
   B[fIndex]   = (a_1[fIndex].Rho2()) 
@@ -154,9 +162,23 @@ TSimplePhysics::Prior(int fIndex)
               - (a_3[fIndex].Rho2()) 
               - (a_4[fIndex].Rho2());
 
-  fLogL[fIndex] = LogLhood(B[fIndex]);
 
-  
+
+  ////////////////////////////////////////////////////////////////////
+  // P_gamma set-up
+  TRandom *pol_gen = new TRandom();
+
+  for(int i = 0; i < fNSamples; i++){
+    P_gamma[i] = pol_gen->Uniform(0.0,1.0);
+  }
+
+
+
+  ////////////////////////////////////////////////////////////////////
+
+  fLogL[fIndex] = LogLhood(B[fIndex],P_gamma[fIndex]);
+
+
 
   ofstream oldprior;
   if (fIndex == 0){
@@ -171,6 +193,8 @@ TSimplePhysics::Prior(int fIndex)
   oldprior << B[fIndex];
   oldprior << " ";
   oldprior << fLogL[fIndex];
+  oldprior << " ";
+  oldprior << P_gamma[fIndex];
   oldprior << "\n";
 
   oldprior.close();
@@ -201,6 +225,7 @@ TSimplePhysics::UpdatedPrior()
   Double_t B_obs;
   Double_t logL_tree;
   Double_t logWt;
+  Double_t P_gam;
 
   //Set branch addresses:
   tree->SetBranchAddress("a1_Re",&a1_Re);
@@ -214,6 +239,7 @@ TSimplePhysics::UpdatedPrior()
   tree->SetBranchAddress("B_obs",&B_obs);
   tree->SetBranchAddress("logL",&logL_tree);
   tree->SetBranchAddress("logWt",&logWt);
+  tree->SetBranchAddress("P_gam",&P_gam);
     
   Long64_t  nentries    = tree->GetEntries();
   Double_t  sumweights  =  0;       // 03/05/2011 - Changed from Float_t to Double_t
@@ -246,6 +272,9 @@ TSimplePhysics::UpdatedPrior()
   Double_t stairHeight;
   Double_t old_floor;
   Double_t new_floor;
+
+  Double_t Pgam_sum;
+  Double_t Pg_stairHeight;
   
   logNu     = log(fNSamples);
   threshold = -maxLogWt;
@@ -261,6 +290,32 @@ TSimplePhysics::UpdatedPrior()
     }
 
     else {
+
+      for (int j = 0; j < fNSamples; j++){
+	pick = gen->Uniform(0.0,1.0);
+	
+	Pgam_sum           = 0;
+	old_floor          = 0;
+	new_floor          = 0;
+
+	for (Long64_t i = 0; i <nentries; i++){
+	  
+	  tree->GetEntry(i);
+	  Pgam_sum        += P_gam;
+	  Pg_stairHeight   = pick + fNSamples*Pgam_sum;
+	  new_floor        = floor(Pg_stairHeight);
+	  
+	  if (new_floor > old_floor){
+	    P_gamma[j] = P_gam;
+	    break;
+	  }
+	  else {
+	    old_floor = new_floor;
+	  }
+
+	}
+
+      }
  
       for (int j = 0; j < fNSamples; j++){
       	pick = gen->Uniform(0.0,1.0);
@@ -301,17 +356,22 @@ TSimplePhysics::UpdatedPrior()
 	}
     
 	// Calcuate the 'B' observable from Dave's 'spin observables' paper
-	a_1[j] = TComplex((Double_t)x[0][j],(Double_t)x[1][j]);
-	a_2[j] = TComplex((Double_t)x[2][j],(Double_t)x[3][j]);
-	a_3[j] = TComplex((Double_t)x[4][j],(Double_t)x[5][j]);
-	a_4[j] = TComplex((Double_t)x[6][j],(Double_t)x[7][j]);
+	// a_1[j] = TComplex((Double_t)x[0][j],(Double_t)x[1][j]);
+	// a_2[j] = TComplex((Double_t)x[2][j],(Double_t)x[3][j]);
+	// a_3[j] = TComplex((Double_t)x[4][j],(Double_t)x[5][j]);
+	// a_4[j] = TComplex((Double_t)x[6][j],(Double_t)x[7][j]);
+
+	a_1[j] = TComplex(x[0][j],x[1][j]);
+	a_2[j] = TComplex(x[2][j],x[3][j]);
+	a_3[j] = TComplex(x[4][j],x[5][j]);
+	a_4[j] = TComplex(x[6][j],x[7][j]);
 
 	B[j] = a_1[j].Rho2() 
 	     + a_2[j].Rho2() 
              - a_3[j].Rho2() 
              - a_4[j].Rho2();
 
-	fLogL[j] = LogLhood(B[j]);
+	fLogL[j] = LogLhood(B[j],P_gamma[j]);
       }
   
      
@@ -321,8 +381,10 @@ TSimplePhysics::UpdatedPrior()
       
       for (int j = 0; j < fNSamples; j++) {
 	UPrior << B[j];
-	// UPrior << " ";
-	// UPrior << fLogL[j];
+	UPrior << " ";
+	UPrior << fLogL[j];
+	UPrior << " ";
+	UPrior << P_gamma[j];
 	UPrior << "\n";
       }
 
@@ -333,10 +395,10 @@ TSimplePhysics::UpdatedPrior()
 }
 //____________________________________________________________________
 double
-TSimplePhysics::LogLhood (float B)
+TSimplePhysics::LogLhood (double B, double Pg)
 {
   // logLikelihood function
-  P_gamma         = 0.8;
+  // P_gamma         = 0.8;
   delta_L         = 0;
   double LogL     = 0.0;
   double costerm  = 0.0;
@@ -350,7 +412,7 @@ TSimplePhysics::LogLhood (float B)
 
   for (int i = 0; i < nEvents; i++){
 
-    costerm = P_gamma*B*cos(2*angles[i]);
+    costerm = Pg*B*cos(2*angles[i]);
     localpol = pol[i];
 
     // Calculate A_tilde for each angle
@@ -382,14 +444,14 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
   // Evolve object within likelihood constraint
   double   step;
   double   fwhm           = 0.1;           // Full width half maximum
-  double   sig;                         // Sigma - to be used in random from Gaussian
+  double   sig;                            // Sigma - to be used in random from Gaussian
   int      accept         = 0;
   int      reject         = 0;
   
   double   trialB;  
   double   trialLogL;
-  float    trialx[8];
-  float    trial_rSquared = 0;
+  double   trialx[8];
+  double   trial_rSquared = 0;
 
   TComplex trial_a1;
   TComplex trial_a2;
@@ -399,10 +461,18 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
   int      m              = 20;
 
 
+  // Everything to do with the new P_gamma array:
+  double   trial_Pgam;
+  double   step_gamma;
+  double   sig_gamma      = 0.05;
+  double   fwhm_gamma     = 2*(TMath::Sqrt( 2*log(2)))*sig_gamma;
+  bool     flag           = true;
+
   for( ; m > 0; m--)
     {
 
-      sig = fwhm / ( 2*( TMath::Sqrt( 2*log(2) ) ) );
+      sig       = fwhm / ( 2*( TMath::Sqrt( 2*log(2) ) ) );
+      flag = true;
 
       for (int i = 0; i < 8; i++){
 	step = gRandom->Gaus(0,sig);
@@ -415,41 +485,61 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
 	trialx[i] /= TMath::Sqrt(trial_rSquared);
       }
 
-      trial_a1 = TComplex((Double_t)trialx[0],(Double_t)trialx[1]);
-      trial_a2 = TComplex((Double_t)trialx[2],(Double_t)trialx[3]);
-      trial_a3 = TComplex((Double_t)trialx[4],(Double_t)trialx[5]);
-      trial_a4 = TComplex((Double_t)trialx[6],(Double_t)trialx[7]);
-     
-      trialB = trial_a1.Rho2() + trial_a2.Rho2() - trial_a3.Rho2() - trial_a4.Rho2();
+      trial_a1   = TComplex(trialx[0],trialx[1]);
+      trial_a2   = TComplex(trialx[2],trialx[3]);
+      trial_a3   = TComplex(trialx[4],trialx[5]);
+      trial_a4   = TComplex(trialx[6],trialx[7]);
+    
+      trialB     = trial_a1.Rho2() + trial_a2.Rho2() - trial_a3.Rho2() - trial_a4.Rho2();
       
-      trialLogL  = LogLhood(trialB);
+      // P_gamma piece
+      sig_gamma  = fwhm_gamma / ( 2*( TMath::Sqrt( 2*log(2) ) ) );
+      // step_gamma = gRandom->Gaus(0,sig_gamma);
+      while(flag == true){
+	step_gamma = gRandom->Gaus(0,sig_gamma);
+	trial_Pgam = P_gamma[sampleIndex] + step_gamma;
+	if((trial_Pgam > 0) && (trial_Pgam < 1)){
+	  flag = false;
+	}
+      }
+
+      trialLogL  = LogLhood(trialB,trial_Pgam);
  
       if(trialLogL > fLogLstar)
       	{
+
 	  for (int i =0; i < 8; i++){
-	    x[i][sampleIndex] = trialx[i];
+	    x[i][sampleIndex]  = trialx[i];
 	  }
 
-	  a_1[sampleIndex] = trial_a1;
-	  a_2[sampleIndex] = trial_a2;
-	  a_3[sampleIndex] = trial_a3;
-	  a_4[sampleIndex] = trial_a4;
+	  a_1[sampleIndex]     = trial_a1;
+	  a_2[sampleIndex]     = trial_a2;
+	  a_3[sampleIndex]     = trial_a3;
+	  a_4[sampleIndex]     = trial_a4;
 
-	  B[sampleIndex]   = trialB;
-
-      	  fLogL[sampleIndex]  = trialLogL;
-	  fLogWt[sampleIndex] = 0.0;
+	  B[sampleIndex]       = trialB;
+	  P_gamma[sampleIndex] = trial_Pgam;
+      	  fLogL[sampleIndex]   = trialLogL;
+	  fLogWt[sampleIndex]  = 0.0;
 	  
 	  
       	  accept++;
       	}
+
       else
       	reject++;
 
-      if(accept > reject)
-      	fwhm *= exp(1.0/accept);
-      if(accept < reject)
-      	fwhm /= exp(1.0/reject);
+      if(accept > reject){
+      	fwhm       *= exp(1.0/accept);
+	// fwhm_gamma *= exp(1.0/accept);
+      }
+      if(accept < reject){
+      	fwhm       /= exp(1.0/reject);
+	// fwhm_gamma /= exp(1.0/reject);
+      }
+      // if((sampleIndex % 1000) == 0){
+      //  	printf("Sample index: %d\t Pgamma: %lf\t Sigma: %lf\t FWHM: %lf\n",sampleIndex,trial_Pgam,sig_gamma,fwhm_gamma);
+      // }
     }
 
 }
@@ -516,6 +606,7 @@ void TSimplePhysics::PrintSummary(char fPost[])
   Double_t B_obs;
   Double_t logL;
   Double_t logWt;
+  Double_t P_gam;
 
   tree.Branch("a1_Re",&a1_Re,"a1_Re/D");
   tree.Branch("a1_Im",&a1_Im,"a1_Im/D");
@@ -528,6 +619,7 @@ void TSimplePhysics::PrintSummary(char fPost[])
   tree.Branch("B_obs",&B_obs,"B_obs/D");
   tree.Branch("logL",&logL,"logL/D");
   tree.Branch("logWt",&logWt,"logWt/D");
+  tree.Branch("P_gam",&P_gam,"P_gam/D");
 
   for (int r = 0; r < fNoIterates; r++){
     a1_Re = post_a1_Re[r];
@@ -541,6 +633,7 @@ void TSimplePhysics::PrintSummary(char fPost[])
     B_obs = post_B[r];
     logL  = fUsedLogL[r];
     logWt = fUsedLogWt[r];
+    P_gam = post_Pgam[r];
     
     tree.Fill();
   }
@@ -569,7 +662,8 @@ TSimplePhysics::StorePost(int index, int nest, double LogL, double LogWt )
     postX[i][nest]      = x[i][index];
   }
 
-  post_B[nest]      = B[index];
+  post_B[nest]     = B[index];
+  post_Pgam[nest]  = P_gamma[index];
 
   fUsedLogL[nest]  = LogL;
   fUsedLogWt[nest] = LogWt;
@@ -584,20 +678,20 @@ void
 TSimplePhysics::SetToCopy(int worst, int copyIndex)
 {
   //Used to set copied sample before going through Explore()
-  fLogL[worst]  = fLogL[copyIndex];
-  fLogWt[worst] = fLogWt[copyIndex];
+  fLogL[worst]   = fLogL[copyIndex];
+  fLogWt[worst]  = fLogWt[copyIndex];
 
   for (int i = 0; i < 8; ++i){
-    x[i][worst] = x[i][copyIndex];
+    x[i][worst]  = x[i][copyIndex];
   }
 
-  a_1[worst]    = a_1[copyIndex];
-  a_2[worst]    = a_2[copyIndex];
-  a_3[worst]    = a_3[copyIndex];
-  a_4[worst]    = a_4[copyIndex];
+  a_1[worst]     = a_1[copyIndex];
+  a_2[worst]     = a_2[copyIndex];
+  a_3[worst]     = a_3[copyIndex];
+  a_4[worst]     = a_4[copyIndex];
 
-  B[worst]      = B[copyIndex];
-
+  B[worst]       = B[copyIndex];
+  P_gamma[worst] = P_gamma[worst];
 
 
 }
