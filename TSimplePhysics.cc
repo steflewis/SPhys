@@ -351,6 +351,9 @@ TSimplePhysics::LogLhood (float B)
   for (int i = 0; i < nEvents; i++){
 
     costerm = P_gamma*B*cos(2*angles[i]);
+    // costerm = P_gamma*B*cos(2*i);
+
+    //    localpol = i;//pol[i];
     localpol = pol[i];
 
     // Calculate A_tilde for each angle

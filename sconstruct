@@ -6,8 +6,8 @@ env = init_environment("root")
 incpath = ['.']
 env.Append(CPPPATH = incpath)
 
-
-env.Append(CXXFLAGS = ['-g3','-O3'])
+#Linkflags -pg is used for profiling code.
+env.Append(CXXFLAGS = ['-g3','-O2'], LINKFLAGS=['-pg'])
 
 env.Program('usercode', ['TUserCode.cc',
 		     'TNestedSample.cc', 
