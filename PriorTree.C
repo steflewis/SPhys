@@ -19,6 +19,7 @@ TFile *PriorTree(){
 
   Double_t   B_orig;
   Double_t   LogL_orig;
+  Double_t   Pgamma;
 
   TString filename = "priortree.root";
   FILE  *OrigPrior = fopen("oldprior.txt","r");
@@ -27,12 +28,13 @@ TFile *PriorTree(){
   TTree *tree  = new TTree("T", "Evolving Prior");
   tree->Branch("B_orig", &B_orig, "B_orig/D");
   tree->Branch("LogL_orig", &LogL_orig, "LogL_orig/D");
+  tree->Branch("Pgamma", &Pgamma, "Pgamma/D");
 
-  tree->ReadFile("oldprior.txt", "B_orig/D:LogL_orig");
+  tree->ReadFile("oldprior.txt", "B_orig/D:LogL_orig:Pgamma");
   tree->Write();
 
   fclose(OrigPrior);
-  Long64_t         nentries = T->GetEntries();
+  /*  Long64_t         nentries = T->GetEntries();
   printf("Number of entries, Original prior: %d\n",nentries);
   TH1F            *Pr  = new TH1F("Prior",  "", 80, -1.3, 1.3           );
 
@@ -42,13 +44,13 @@ TFile *PriorTree(){
     Pr->Fill(B_orig);
 
   }
-
+  */
   //*************************//
   //       New Prior       //
   //*************************//
 
   // New Prior - 1
-
+  /*
   Double_t   B_1;
 
   //  TString filename = "priortree.root";
@@ -63,9 +65,9 @@ TFile *PriorTree(){
 
   fclose(NewPrior1);
 
-
+  */
   //******PLOTS**************//
-
+  /*
   
   TH1F            *Pr  = new TH1F("Prior",  "", 80, -1.3, 1.3           );
   TH1F            *PrNew1  = new TH1F("Prior New 1",  "", 80, -1.3, 1.3 );
@@ -82,10 +84,10 @@ TFile *PriorTree(){
     PrNew1->Fill(B_1);
   }
 
-
+  */
   ///////////////////////////////
 
-
+  /*
 
    TCanvas *Prior   = new TCanvas("Prior", "Prior, TSimplePhysics", 1200, 900);
    Prior->SetFillStyle(0);
@@ -99,7 +101,7 @@ TFile *PriorTree(){
    //Prior->SaveAs("firstPrior.png");
    PrNew1->SetFillColor(2);
    PrNew1->Draw("SAME");
-
+  */
 
   return 0;
 }

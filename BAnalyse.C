@@ -34,6 +34,7 @@
    Double_t     B_obs;
    Double_t     logL;
    Double_t     logWt;
+   Double_t     P_gam ;
 
    // Set branch addresses.
    T->SetBranchAddress("a1_Re",  &a1_Re);
@@ -47,6 +48,7 @@
    T->SetBranchAddress("B_obs",  &B_obs);
    T->SetBranchAddress("logL",   &logL );
    T->SetBranchAddress("logWt",  &logWt);
+   T->SetBranchAddress("P_gam",  &P_gam);
 
    Long64_t         nentries = T->GetEntries();
  
@@ -54,6 +56,8 @@
  
    TH2F            *a1  = new TH2F("a1",  "", 200, -1, 1,  200, -1, 1);
    TH1F            *h1  = new TH1F("h1",  "", 200, -1, 1             );
+   TH2F            *PB  = new TH2F("PB",  "", 200, -1, 1,  200, 0, 1);
+
    // TH1F            *h2  = new TH1F("h2",  "", 100, 0, 2            );
 
  
@@ -79,6 +83,7 @@
               // h0->Fill(posX,posY, ( TMath::Exp(LogL) )*( TMath::Exp(LogWt + TMath::Abs(maxLogWt) ) ) );
       a1->Fill(a1_Re,a1_Im, TMath::Exp(logL + logWt + TMath::Abs(maxLogWt)));
        // h2->Fill(posY, TMath::Exp(LogL + LogWt + TMath::Abs(maxLogWt))        );
+      PB->Fill(B_obs,P_gam, TMath::Exp(logL + logWt + TMath::Abs(maxLogWt)));
 
    }
 
@@ -92,15 +97,15 @@
      // c1->SaveAs("~/public_html/nestedsampling/lighthouseXweighted.png");
     c1->SaveAs("BNewPriorTestM-20000.png");
 
-  //    TCanvas *c2   = new TCanvas("c2", "Lighthouse Y-coord, TNestedSample", 1200, 900);
-  // c2->SetFillStyle(0);
-  // c2->SetFillColor(0);
-  // c2->SetFrameFillStyle(0);
-  // c2->cd(1);
-  // h2->Draw("");
+      TCanvas *c2   = new TCanvas("c2", "P_gamma and B, TNestedSample", 1200, 900);
+   c2->SetFillStyle(0);
+   c2->SetFillColor(0);
+   c2->SetFrameFillStyle(0);
+   c2->cd(1);
+   PB->Draw("COLZ");
   
-  //   // c2->SaveAs("~/public_html/nestedsampling/lighthouseYweighted.png");
-  //  c2->SaveAs("gen2lighthouseYweighted.png");
+     // c2->SaveAs("~/public_html/nestedsampling/lighthouseYweighted.png");
+    c2->SaveAs("Pgamma_v_B.png");
 
    TCanvas *c3   = new TCanvas("c3", "a1, TNestedSample", 1200, 900);
    c3->SetFillStyle(0);

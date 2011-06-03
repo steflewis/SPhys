@@ -169,7 +169,8 @@ TSimplePhysics::Prior(int fIndex)
   TRandom *pol_gen = new TRandom();
 
   for(int i = 0; i < fNSamples; i++){
-    P_gamma[i] = pol_gen->Uniform(0.0,1.0);
+    //P_gamma[i] = pol_gen->Gaus(0.8, 0.01);
+    P_gamma[i] = pol_gen->Uniform(0.0, 1.0);
   }
 
 
@@ -495,13 +496,16 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
       // P_gamma piece
       sig_gamma  = fwhm_gamma / ( 2*( TMath::Sqrt( 2*log(2) ) ) );
       // step_gamma = gRandom->Gaus(0,sig_gamma);
-      while(flag == true){
-	step_gamma = gRandom->Gaus(0,sig_gamma);
-	trial_Pgam = P_gamma[sampleIndex] + step_gamma;
-	if((trial_Pgam > 0) && (trial_Pgam < 1)){
-	  flag = false;
-	}
-      }
+      //while(flag == true){
+      //step_gamma = gRandom->Gaus(0,sig_gamma);
+      if(sig_gamma > 1)
+	sig_gamma = 1/sig_gamma;
+      step_gamma = gRandom->Uniform(0.0,sig_gamma);
+      trial_Pgam = P_gamma[sampleIndex] + step_gamma;
+	//if((trial_Pgam > 0) && (trial_Pgam < 1)){
+	//  flag = false;
+	//}
+	//}
 
       trialLogL  = LogLhood(trialB,trial_Pgam);
  
