@@ -31,6 +31,7 @@ TSimplePhysics::TSimplePhysics()
 
 }
 //_____________________________________________________________________
+// Second constructor
 TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSample(numberOfObjects, logWidth)
 {
 
@@ -169,9 +170,15 @@ TSimplePhysics::Prior(int fIndex)
   TRandom *pol_gen = new TRandom();
 
   for(int i = 0; i < fNSamples; i++){
-    //P_gamma[i] = pol_gen->Gaus(0.8, 0.01);
-    P_gamma[i] = pol_gen->Uniform(0.0, 1.0);
+    P_gamma[i] = pol_gen->Gaus(0.8, 0.01);
+    //P_gamma[i] = pol_gen->Uniform(0.0, 1.0);
   }
+
+//   // Just to test small change in code.
+//   for(int i = 0; i < fNSamples; i++){
+//     //P_gamma[i] = pol_gen->Gaus(0.8, 0.01);
+//     P_gamma[i] = 0.8;
+//   }
 
 
 
@@ -463,6 +470,8 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
 
 
   // Everything to do with the new P_gamma array:
+  //double   PB;
+  //double   trial_PB;
   double   trial_Pgam;
   double   step_gamma;
   double   sig_gamma      = 0.05;
@@ -494,6 +503,7 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
       trialB     = trial_a1.Rho2() + trial_a2.Rho2() - trial_a3.Rho2() - trial_a4.Rho2();
       
       // P_gamma piece
+      //PB         = trialB * P_gamma[sampleIndex];
       sig_gamma  = fwhm_gamma / ( 2*( TMath::Sqrt( 2*log(2) ) ) );
       // step_gamma = gRandom->Gaus(0,sig_gamma);
       //while(flag == true){
@@ -502,6 +512,11 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
 	sig_gamma = 1/sig_gamma;
       step_gamma = gRandom->Uniform(0.0,sig_gamma);
       trial_Pgam = P_gamma[sampleIndex] + step_gamma;
+      
+      //trial_PB = PB + step_gamma;
+
+      //trial_Pgam = trial_PB / trialB;
+
 	//if((trial_Pgam > 0) && (trial_Pgam < 1)){
 	//  flag = false;
 	//}
@@ -594,8 +609,9 @@ void TSimplePhysics::PrintSummary(char fPost[])
   */
 
   // Output posterior to ROOT file
+  TFile    hfile(fPost,"RECREATE");
 
-  TFile    hfile("BposteriorTest.root","RECREATE");
+  // TFile    hfile("BposteriorTest.root","RECREATE");
   TTree    tree("tree", "Beam recoil posterior");
 
 

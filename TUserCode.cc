@@ -50,9 +50,9 @@ const int noSamples = 3000;  //Set number of objects.
 
 
 //Set filenames to be used for posterior file.  Not to exceed
-//30 characters, should include .txt and should conform to all filename rules.
+//50 characters, should include .root and should conform to all filename rules.
 
-char posterior[] = "lighthouse_NSposterior.txt";
+char posterior[] = "simpleB_posterior_test.root";
 
 double logWidth = log(1.0 - exp(-1.0 / noSamples));
 

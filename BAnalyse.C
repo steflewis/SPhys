@@ -13,10 +13,12 @@
   gStyle->SetFrameFillStyle(0);
   gStyle->SetFillStyle(0);
 
+  const char* filename = "simpleB_posterior_test.root";
+
   // change filename in lines below
-   TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("BposteriorTest.root");
+   TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(filename);
    if (!f) {
-      f = new TFile("BposteriorTest.root");
+      f = new TFile(filename);
    }
    // change "T" below to sivia
    TTree *T = (TTree*)gDirectory->Get("tree");
@@ -57,6 +59,9 @@
    TH2F            *a1  = new TH2F("a1",  "", 200, -1, 1,  200, -1, 1);
    TH1F            *h1  = new TH1F("h1",  "", 200, -1, 1             );
    TH2F            *PB  = new TH2F("PB",  "", 200, -1, 1,  200, 0, 1);
+  
+   // Histogram of P*B:
+   TH1F            *PB_prod = new TH1F("PB_prod", "", 200, -1, 1);
 
    // TH1F            *h2  = new TH1F("h2",  "", 100, 0, 2            );
 
@@ -85,6 +90,8 @@
        // h2->Fill(posY, TMath::Exp(LogL + LogWt + TMath::Abs(maxLogWt))        );
       PB->Fill(B_obs,P_gam, TMath::Exp(logL + logWt + TMath::Abs(maxLogWt)));
 
+      PB_prod->Fill((B_obs*P_gam), TMath::Exp(logL + logWt + TMath::Abs(maxLogWt)) );
+
    }
 
    TCanvas *c1   = new TCanvas("c1", "Simple Beam Recoil, TNestedSample", 1200, 900);
@@ -102,6 +109,8 @@
    c2->SetFillColor(0);
    c2->SetFrameFillStyle(0);
    c2->cd(1);
+   PB->GetXaxis()->SetTitle("B ('sigma')");
+   PB->GetYaxis()->SetTitle("Pgamma");
    PB->Draw("COLZ");
   
      // c2->SaveAs("~/public_html/nestedsampling/lighthouseYweighted.png");
@@ -117,4 +126,14 @@
    a1->Draw("COLZ");
      // c3->SaveAs("~/public_html/nestedsampling/lighthouseTNSplotweighted.png");
     c3->SaveAs("amp1NewPriorTestM-20000.png");
+
+    TCanvas *c4  = new TCanvas("c4", "P_gamma * B, TNestedSample", 1200, 900);
+    c4->SetFillStyle(0);
+    c4->SetFillColor(0);
+    c4->SetFrameFillStyle(0);
+    PB_prod->GetXaxis()->SetTitle("Pgamma*B");
+    c4->cd(1);
+    PB_prod->Draw("");
+    c4->SaveAs("PB_product_pdf.png");
+    
 }

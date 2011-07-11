@@ -23,7 +23,7 @@
 #ifndef sconsNS4_TNestedSample
 #define sconsNS4_TNestedSample
 
-#define MAX_SAMPLES 200000
+#define MAX_SAMPLES 1200000
 using namespace std;
 // #include "Riostream.h"
 // #include "TROOT.h"
@@ -42,7 +42,7 @@ using namespace std;
 #define logZERO   (-DBL_MAX*DBL_EPSILON) //log(0) - smallest value possible.
 #define UNIFORM ((rand()+0.5)/(RAND_MAX+1.0)) //uniform inside (0,1)
 
-const int ITERATES = 100000;
+const int ITERATES = 40000;
 const int DEBUG    = 0;   //Set to 0 to turn off DEBUG mode.
 
 enum EBoolean {kFalse, kTrue};
@@ -111,7 +111,7 @@ class TNestedSample {
   int               fNoIterates;
   int               fIncrement;
 
-  char              fPost[36];     //Filename for posterior file
+  char              fPost[60];     //Filename for posterior file
   double            fBig;          //used in termination condition for 
                                    //'significantly exceeds' 
  private:
