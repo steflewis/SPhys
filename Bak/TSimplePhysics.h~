@@ -5,15 +5,15 @@
 //      Project: sconsNS4
 //               ~~~~~~
 //  
-//      File: TSimpleBeamRecoil.h
+//      File: TSimplePhysics.h
 //            ~~~~~~~~~~~~~~~~~~
 //
 //      Description:     
 //      This determines the most likely value for the B observable.
 //
 // ==================================================================== 
-#ifndef sconsNS4_TSimpleBeamRecoil
-#define sconsNS4_TSimpleBeamRecoil
+#ifndef sconsNS4_TSimplePhysics
+#define sconsNS4_TSimplePhysics
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -38,16 +38,18 @@
 const double pi = M_PI;
 
 
-class TSimpleBeamRecoil : public TNestedSample {
+class TSimplePhysics : public TNestedSample {
 
 
   // Public stuff
 public:
-  // Operations
-  TSimpleBeamRecoil();
-  ~TSimpleBeamRecoil() {};
+  
+  /**************Operations***************/
+  
+  TSimplePhysics();
+  ~TSimplePhysics() {};
 
-  TSimpleBeamRecoil(int numberOfObjects, double logWidth);
+  TSimplePhysics(int numberOfObjects, double logWidth);
     
   // Set object according to uniform prior
   void     Prior (int fIndex);
@@ -55,7 +57,7 @@ public:
   void     UpdatedPrior();
 
   // logLikelihood function
-  double   LogLhood (float B);
+  double   LogLhood (double B, double Pg);
         
   // Evolve object within likelihood constraint
   void     Explore (double logLstar, int sampleIndex);
@@ -65,18 +67,20 @@ public:
   void     TestValues();
   void     StorePost(int, int, double, double);
 
+  /***************Attributes*****************/
+  
   // double   *x;	// Easterly position between -2 and +2
   // double   *y;	// Northerly position between 0 and 2
   // double   *u;        // Uniform prior parameter for x
   // double   *v;        // Uniform prior parameter for y
 
   // Variables required for Prior():
-  float    **x;          // Hold random numbers - will be array[8] where each 
+  double  **x;          // Hold random numbers - will be array[8] where each 
                          // are re-defined for each value of B (i.e. each
                          // sample).
 
 
-  float     rSquared;   // distance squared
+  double    rSquared;   // distance squared
   
 
   TComplex *a_1;  // Complex variables - there are 4 complex amplitudes. 
@@ -84,16 +88,16 @@ public:
   TComplex *a_3;  // method.  I.e. can alter the complex amplitudes to determine
   TComplex *a_4;  // new (slightly changed) value of B.
   
-  float     *B;          // array[nSamples] holding prior values of B
+  double   *B;          // array[nSamples] holding prior values of B
 
-  
+  double    Log2e;
+
   // LogLhood() Variables:
   ifstream  eventgen;   // File containing azimuthal angles for each event
   ifstream  newprior;   // File to read in new prior information.
   double   *angles;     // Extracted angles from file, will be array[nEvents]
   double   *pol;        // Array of polarisation states (-1 or 1) also extracted
-  double    P_gamma;     // Initially will be single value, later will be array.
-                        // P_gamma is the photon polarisation number
+  double   *P_gamma;    // Beam polarisation
 
   double    delta_L;     // Luminosity asymmetry (essentially). Initially will be 
                         // kept as 0 but will eventually be an array?
@@ -101,9 +105,9 @@ public:
   int       nEvents;    // Number of events.
   
   FILE      *events;
-  bool       NewPrior;   // Set to true if using updated prior frrom posterior
+  bool      NewPrior;   // Set to true if using updated prior frrom posterior
 
-  bool       testPrior;
+  bool      testPrior;
 
   //Explore() Variables:
   // I don't know what will be required here yet.
@@ -122,7 +126,8 @@ public:
 
   double   **postX;
 
-  float   *post_B;
+  double   *post_B;
+  double   *post_Pgam;
 
   ofstream  fPosterior;    //saves posterior results (fSamples)
   ofstream  fNewPrior;     //To use results as new Prior function.

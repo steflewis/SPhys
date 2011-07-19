@@ -32,7 +32,7 @@
 // #include "TRandom.h"
 // #include "TMath.h"
 // #include <TFile.h>
-#include "TSimpleBeamRecoil.h"
+#include "TSimplePhysics.h"
 #include <math.h>
 #include <iostream>
 #include <cstdlib>
@@ -74,7 +74,7 @@ int main(void)
 {
 
 
-  TSimpleBeamRecoil *LH = new TSimpleBeamRecoil(noSamples,logWidth);
+  TSimplePhysics *LH = new TSimplePhysics(noSamples,logWidth);
 
 
 
