@@ -131,6 +131,16 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
   sampleIndex  = 0;
   Log2e        = log2(TMath::E());
 
+  // Set up OpenCL kernel stuff
+  // Need to instantiate an instance of the OclWrapper class - do this in TSimplePhysics constructor.
+  OclWrapper *wrapper = new OclWrapper(true);
+  // Platform is created in constructor, context and devices are found/created.
+  
+  // Load and Build Kernel
+  wrapper->loadKernel("Likelihood2.cl",likelihood);
+  
+  
+  
 }
 //____________________________________________________________________
 void
@@ -403,77 +413,29 @@ TSimplePhysics::UpdatedPrior()
 double
 TSimplePhysics::LogLhood (double B, double Pg)
 {
-
-  //===================================================//
-  // Method development notes -                        //
-  //                                                   //
-  // Weak decay constant set to non-diluted value.     //
-  // Need to somewhere declare/initialise these:       //
-  // -- T                                              //
-  // -- R    (guessing prior! and passed as arg)       //
-  // -- csy  (think this is from input file)           //
-  //                                                   //
-  //===================================================//
+  // Variable Declarations
+  unsigned int num = 3000;
   
-  // logLikelihood function
-  // P_gamma         = 0.8;
-  delta_L         = 0;
-  double LogL     = 0.0;
-  double costerm  = 0.0;
-  double prob     = 0.0;   // Probability
-  double A_tilde;
-  double localpol = 0.0;
+  size_t array_size = sizeof(double)*num;
 
-  // For use of log base 2:
-  double LogL_2   = 0.0;
-  //double A_temp;
+  // Create OpenCL Arrays
+  cl_B = wrapper->makeReadBuffer(1);
+  cl_Pg = wrapper->makeReadBuffer(1);
+  cl_angles = wrapper->makeReadBuffer(array_size);
+  cl_pols = wrapper->makeReadBuffer(array_size);
+  cl_LogL = wrapper->makeWriteBuffer(1);
+  
+  // Set kernel arguments - how?
+  
+  // Create command queue
+  
+  
+  // Push CPU arrays to GPU
+  
+  // Execute kernel
+  
 
-  for (int i = 0; i < nEvents; i++){
-    // Additional attributes used for combined likelihood function
-    // So far for all linear beam recoil variables
-    
-    /*   NEW LOGLIKELIHOOD METHOD!!!
-    double f = 1 + weak*csy*R;   //NOT diluted, could multiply by dilution though.
-    double g = (B+weak*csy*T)*TMath::Cos(2*angles[i]); //Assuming no offset initially.
-    */
-    
-    costerm = Pg*B*cos(2*angles[i]);
-    localpol = pol[i];
 
-    // Calculate A_tilde for each angle
-    A_tilde = ( costerm + delta_L )  / ( 1 + (costerm*delta_L) ) ;
-    
-  /*  NEW LOGLHOOD
-    A_temp = (Pg*g) / f;
-    
-    A_tilde = (A_temp + delta_L) / (1 + A_temp*delta_L);
-    */
-    // Polarisation of 0 corresponds to PERP
-    if ( localpol < 0 ){
-        prob = 0.5*(1 + A_tilde);
-    }
-
-    // Polarisation of 1 corresponds to PARA
-    else if ( localpol >= 0 ){
-      prob = 0.5*(1 - A_tilde);
-    }
-    
-    /*   NEW LOGLHOOD
-    // Now need to ensure within bounds [0,R*R]
-    
-    double squares_LHS = Ox*Ox + Oz*Oz + B*B - T*T;
-    double Rsquared    = R*R;
-    
-    // Normalise...
-    // Somehow need to normalise.  Dave uses his "TopHatPrior" function.  
-    // Could make a similar function, any alternative?
-    */
-    LogL_2 += log2(prob);
-
- 
-  }
-  LogL = LogL_2 / Log2e;
-  return LogL;
 
 }
 
