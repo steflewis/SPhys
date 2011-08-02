@@ -82,9 +82,10 @@ int main(){
   // Number of samples, filename of prior, filename of posterior.
 
   const int MAX_SAMPLES = 3000;
+  // Prior filename
   char * prior_filename = "/home/stefl/SPhys2/text_files/oldprior_Pg_uni.txt";
-  const char* filename = "/home/stefl/SPhys2/root_files/simpleB_posterior_test.root";
-
+  // Posterior filename
+  const char* filename = "/home/stefl/SPhys2/root_files/Bposterior.root";
 
 
   // Declare histograms
