@@ -426,17 +426,33 @@ TSimplePhysics::LogLhood (double B, double Pg)
   cl_LogL = wrapper->makeWriteBuffer(1);
   
   // Set kernel arguments - how?
+/*  err = kernel.setArg(0, cl_B);
+  err = kernel.setArg(1, cl_Pg);
+  err = kernel.setArg(2, cl_LogL);
+
+  // Constant arguments:
+  err = kernel.setArg(3, Log2e);
+
+  cl::Event event;*/
   
   // Create command queue
-  
+  wrapper->createQueue();
   
   // Push CPU arrays to GPU
+  wrapper->writeBuffer(cl_B,1,B);
+  wrapper->writeBuffer(cl_Pg,1,Pg);
+  wrapper->writeBuffer(cl_angles,array_size,angles);
+  wrapper->writeBuffer(cl_pols,array_size,pols);
   
   // Execute kernel
+  // really not sure what to do here.
+  wrapper->enqueueNDRange();
+  // no idea what should be in the parentheses
   
-
-
-
+  // Enqueue read buffers
+  wrapper->readBuffer(cl_LogL,1,LogL);
+  
+  
 }
 
 //____________________________________________________________________
