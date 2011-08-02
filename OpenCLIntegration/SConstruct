@@ -1,0 +1,5 @@
+# scons lib=1
+
+from OclBuilder import build
+
+build('',[])
