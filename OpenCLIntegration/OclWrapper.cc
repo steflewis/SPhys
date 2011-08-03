@@ -289,11 +289,13 @@ void OclWrapper::createQueue() {
     checkErr(err, "CommandQueue::CommandQueue()");
 }
 
-cl::KernelFunctor OclWrapper::enqueueNDRange(const cl::NDRange& globalRange,const cl::NDRange& localRange) {
+void OclWrapper::enqueueNDRange(const cl::NDRange& globalRange,const cl::NDRange& localRange) {
 	// Create the CommandQueue
 	queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
 	checkErr(err, "CommandQueue::CommandQueue()");
-	return kernel_p->bind(*queue_p,globalRange, localRange);
+	kernel_functor=kernel_p->bind(*queue_p,globalRange, localRange);
+//	return kernel_functor;
+//	return kernel_p->bind(*queue_p,globalRange, localRange);
 }
 
 cl::Buffer& OclWrapper::makeWriteBuffer(int bufSize) {
@@ -301,6 +303,16 @@ cl::Buffer& OclWrapper::makeWriteBuffer(int bufSize) {
 	            *context_p,
 	            CL_MEM_WRITE_ONLY,
 	            bufSize,NULL,&err);
+	 checkErr(err, "Buffer::Buffer()");
+	 cl::Buffer& buf_r =*buf_p;
+	return buf_r;
+}
+
+cl::Buffer& OclWrapper::makeReadBuffer(int bufSize,void* hostBuf, cl_mem_flags flags) {
+	 cl::Buffer* buf_p= new cl::Buffer(
+	            *context_p,
+	            flags,
+	            bufSize,hostBuf,&err);
 	 checkErr(err, "Buffer::Buffer()");
 	 cl::Buffer& buf_r =*buf_p;
 	return buf_r;
