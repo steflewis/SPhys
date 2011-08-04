@@ -198,7 +198,7 @@ void TNestedSample::FinalCorrection()
 void TNestedSample::PrintSummary(char fPost[])
 {
  
-  int m = 2;
+ // int m = 2;
 
 }
 
@@ -206,16 +206,16 @@ void TNestedSample::PrintSummary(char fPost[])
 void TNestedSample::Prior(TNestedSample*,int)
 {
 
-  int x = 3;
+ // int x = 3;
   
 }
 
 //________________________________________________________________________
-double TNestedSample::LogLhood(double,double)
+float TNestedSample::LogLhood(float,float)
 {
 
   double y = 3.*4.;
-  return y;
+  return (float)y;
   
 }
 //________________________________________________________________________

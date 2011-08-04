@@ -26,7 +26,7 @@
 #include "Rtypes.h"
 
 #include "TNestedSample.h"
-#include "OclWrapper.h"
+//#include "OclWrapper.h"
 #include <math.h>
 #include <iostream>
 #include <fstream>
@@ -54,20 +54,20 @@ public:
   TSimplePhysics(int numberOfObjects, double logWidth);
     
   // Set object according to uniform prior
-  void     Prior (int fIndex);
-  void     TestPrior (int fIndex, double, double); 
-  void     UpdatedPrior();
+  virtual void     Prior (int fIndex);
+ // virtual void     TestPrior (int fIndex, double, double); 
+  virtual void     UpdatedPrior();
 
   // logLikelihood function
-  double   LogLhood (double B, double Pg);
+  virtual float    LogLhood (float B, float Pg);
         
   // Evolve object within likelihood constraint
-  void     Explore (double logLstar, int sampleIndex);
-  void     SetToCopy(int worst, int copyIndex);
+  virtual void     Explore (double logLstar, int sampleIndex);
+  virtual void     SetToCopy(int worst, int copyIndex);
 
-  void     PrintSummary(char*);
-  void     TestValues();
-  void     StorePost(int, int, double, double);
+  virtual void     PrintSummary(char*);
+ // virtual void     TestValues();
+  virtual void     StorePost(int, int, double, double);
 
   /***************Attributes*****************/
   
@@ -141,7 +141,7 @@ public:
 
         
   // Private stuff
-private:
+protected:
   // Fields
   int       noObjs;  //Number of objects.
 

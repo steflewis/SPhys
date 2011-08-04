@@ -42,7 +42,7 @@ using namespace std;
 #define logZERO   (-DBL_MAX*DBL_EPSILON) //log(0) - smallest value possible.
 #define UNIFORM ((rand()+0.5)/(RAND_MAX+1.0)) //uniform inside (0,1)
 
-const int ITERATES = 1000000;
+const int ITERATES = 40000;
 const int DEBUG    = 0;   //Set to 0 to turn off DEBUG mode.
 
 enum EBoolean {kFalse, kTrue};
@@ -75,7 +75,7 @@ class TNestedSample {
   //Compiler complains.  What happens if not pure virtual?
   virtual void Prior(TNestedSample*,int);
 
-  virtual double LogLhood(double,double);
+  virtual float LogLhood(float,float);
 
   virtual void Introduce();
 

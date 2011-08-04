@@ -131,13 +131,13 @@ TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSamp
   sampleIndex  = 0;
   Log2e        = log2(TMath::E());
 
-  // Set up OpenCL kernel stuff
+/*  // Set up OpenCL kernel stuff
   // Need to instantiate an instance of the OclWrapper class - do this in TSimplePhysics constructor.
   OclWrapper *wrapper = new OclWrapper(true);
   // Platform is created in constructor, context and devices are found/created.
   
   // Load and Build Kernel
-  wrapper->loadKernel("Likelihood2.cl",likelihood);
+  wrapper->loadKernel("Likelihood2.cl",likelihood);*/
   
   
   
@@ -410,48 +410,10 @@ TSimplePhysics::UpdatedPrior()
     }
 }
 //____________________________________________________________________
-double
-TSimplePhysics::LogLhood (double B, double Pg)
+float
+TSimplePhysics::LogLhood (float B, float Pg)
 {
-  // Variable Declarations
-  unsigned int num = 3000;
-  
-  size_t array_size = sizeof(double)*num;
-
-  // Create OpenCL Arrays
-  cl_B = wrapper->makeReadBuffer(1);
-  cl_Pg = wrapper->makeReadBuffer(1);
-  cl_angles = wrapper->makeReadBuffer(array_size);
-  cl_pols = wrapper->makeReadBuffer(array_size);
-  cl_LogL = wrapper->makeWriteBuffer(1);
-  
-  // Set kernel arguments - how?
-/*  err = kernel.setArg(0, cl_B);
-  err = kernel.setArg(1, cl_Pg);
-  err = kernel.setArg(2, cl_LogL);
-
-  // Constant arguments:
-  err = kernel.setArg(3, Log2e);
-
-  cl::Event event;*/
-  
-  // Create command queue
-  wrapper->createQueue();
-  
-  // Push CPU arrays to GPU
-  wrapper->writeBuffer(cl_B,1,B);
-  wrapper->writeBuffer(cl_Pg,1,Pg);
-  wrapper->writeBuffer(cl_angles,array_size,angles);
-  wrapper->writeBuffer(cl_pols,array_size,pols);
-  
-  // Execute kernel
-  // really not sure what to do here.
-  wrapper->enqueueNDRange();
-  // no idea what should be in the parentheses
-  
-  // Enqueue read buffers
-  wrapper->readBuffer(cl_LogL,1,LogL);
-  
+ return B*Pg;
   
 }
 

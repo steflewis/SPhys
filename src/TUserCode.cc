@@ -32,7 +32,7 @@
 // #include "TRandom.h"
 // #include "TMath.h"
 // #include <TFile.h>
-#include "TSimplePhysics.h"
+#include "TSimplePhysics_CPU.h"
 #include <math.h>
 #include <iostream>
 #include <cstdlib>
@@ -52,7 +52,7 @@ const int noSamples = 3000;  //Set number of objects.
 //Set filenames to be used for posterior file.  Not to exceed
 //50 characters, should include .root and should conform to all filename rules.
 
-char posterior[] = "test.root";
+char posterior[] = "SPhys_vCPU_test1.root";
 
 double logWidth = log(1.0 - exp(-1.0 / noSamples));
 
@@ -74,7 +74,7 @@ int main(void)
 {
 
 
-  TSimplePhysics *LH = new TSimplePhysics(noSamples,logWidth);
+  TSimplePhysics_CPU *LH = new TSimplePhysics_CPU(noSamples,logWidth);
 
 
 

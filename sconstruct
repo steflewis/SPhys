@@ -11,8 +11,8 @@ env.Append(CXXFLAGS = '-g3')
 
 env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc'])  
 
 env.Library('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc'])  
