@@ -53,7 +53,7 @@ class TNestedSample {
   // Constructors
   TNestedSample();
 
-  TNestedSample(int numberOfSamples, double logWidth);
+  TNestedSample(int numberOfSamples, double logWidth, char* name);
 
   // Operations
   virtual void PrintSummary(char*); //Prints results
@@ -114,6 +114,9 @@ class TNestedSample {
   char              fPost[60];     //Filename for posterior file
   double            fBig;          //used in termination condition for 
                                    //'significantly exceeds' 
+                                   
+  char              *fDataFile;
+ 
  private:
   virtual void Eval(int, int);     //This is the main nested sampling loop.  
                            //It is contained within the Iterate function.

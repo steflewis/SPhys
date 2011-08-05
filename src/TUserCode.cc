@@ -56,7 +56,7 @@ char posterior[] = "SPhys_vCPU_test1.root";
 
 double logWidth = log(1.0 - exp(-1.0 / noSamples));
 
-
+char datafile[] = "/home/stefl/NestedSampling/CPU_GPU/text_files/datatest.txt";
 
 int testing = 0;   //Change to 1 when testing.
 int verbose = 1;
@@ -74,7 +74,7 @@ int main(void)
 {
 
 
-  TSimplePhysics_CPU *LH = new TSimplePhysics_CPU(noSamples,logWidth);
+  TSimplePhysics_CPU *LH = new TSimplePhysics_CPU(noSamples,logWidth, datafile);
 
 
 

@@ -32,7 +32,7 @@ TNestedSample::TNestedSample()
 
 
 //_____________________________________________________________________
- TNestedSample::TNestedSample(int numberOfSamples, double logWidth)
+ TNestedSample::TNestedSample(int numberOfSamples, double logWidth, char* name)
  {
 
    fNSamples       = numberOfSamples;
@@ -41,7 +41,7 @@ TNestedSample::TNestedSample()
    fUsedLogL       = new double[MAX_SAMPLES];
    fUsedLogWt      = new double[MAX_SAMPLES];
 
-
+   fDataFile       = name;
 
    fLogW           = logWidth;
    fLogZ           = -DBL_MAX;

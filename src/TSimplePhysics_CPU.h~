@@ -13,8 +13,8 @@
 //      Uses standard CPU processing power.
 //
 // ==================================================================== 
-#ifndef sconsNS4_TSimplePhysics
-#define sconsNS4_TSimplePhysics
+// #ifndef sconsNS4_TSimplePhysics
+// #define sconsNS4_TSimplePhysics
 
 #include "TSimplePhysics.h"
 #include "TNestedSample.h"
@@ -37,14 +37,14 @@ public:
   TSimplePhysics_CPU();
   ~TSimplePhysics_CPU() {};
   
-  TSimplePhysics_CPU(int numberOfObjects, double logWidth);
+  TSimplePhysics_CPU(int numberOfObjects, double logWidth, const char* name);
   
   float LogLhood(float B, float Pg);
   
   // Attributes:
   // all should be inherited from TSimplePhysics  
 };
-#endif
+// #endif
 
 
 //      End-of-file

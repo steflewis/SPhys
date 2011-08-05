@@ -38,15 +38,15 @@ TSimplePhysics_CPU::TSimplePhysics_CPU()
 
 }
 //_____________________________________________________________________
-TSimplePhysics_CPU::TSimplePhysics_CPU(int numberOfObjects, double logWidth):TSimplePhysics(numberOfObjects, logWidth)
+TSimplePhysics_CPU::TSimplePhysics_CPU(int numberOfObjects, double logWidth, const char* name):TSimplePhysics(numberOfObjects, logWidth, name)
 {
   
   
   
 }
 //____________________________________________________________________
-double
-TSimplePhysics_CPU::LogLhood (double B, double Pg)
+float
+TSimplePhysics_CPU::LogLhood (float B, float Pg)
 {
 
   //===================================================//
