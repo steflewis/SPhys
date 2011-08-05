@@ -41,89 +41,17 @@ TSimplePhysics::TSimplePhysics()
 TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSample(numberOfObjects, logWidth)
 {
 
-
+  
   // Determine number of events:
-
+  const char* name = "/home/Stefanie/NestedSampling/CPU_GPU/text_files/datatest.txt";
+  
   nEvents = 0;
-  string line;
-
-  // Read in azimuthal angles from file:
-  eventgen.open("/home/stefl/SPhys2/text_files/datatest.txt");
-
-  while( getline(eventgen, line)){
-    nEvents++;
-  }
-
-  eventgen.close();
-  eventgen.clear();
-
-  // printf("Have found number of events: %d\n",nEvents);
-
-  angles  = new double[nEvents];
-  pol     = new double[nEvents];
-  B       = new double[fNSamples];
-  P_gamma = new double[fNSamples];
-
-  // Declare 2D arrays for x values.  
-  // Essentially will be x[8][fNSamples].
-
-  x       = new double*[8];
- 
- for (int i = 0; i < 8; i++){
-    x[i] = new double[fNSamples];
-  }
-
   
+  nEvents = GetEvents(name);
 
-  a_1     = new TComplex[fNSamples];
-  a_2     = new TComplex[fNSamples];
-  a_3     = new TComplex[fNSamples];
-  a_4     = new TComplex[fNSamples];
-
-  // Declare & Initialise posterior arrays:
+  CreateArrays();
   
-  postX      = new double*[8];
-  for (int i = 0; i < 8; i++){
-    postX[i] = new double[MAX_SAMPLES];
-  }
-
-  post_a1_Re = new double[MAX_SAMPLES];
-  post_a1_Im = new double[MAX_SAMPLES];
-  post_a2_Re = new double[MAX_SAMPLES];
-  post_a2_Im = new double[MAX_SAMPLES];
-  post_a3_Re = new double[MAX_SAMPLES];
-  post_a3_Im = new double[MAX_SAMPLES];
-  post_a4_Re = new double[MAX_SAMPLES];
-  post_a4_Im = new double[MAX_SAMPLES];
-
-  post_B     = new double[MAX_SAMPLES];
-  post_Pgam  = new double[MAX_SAMPLES];
-
-  
-  eventgen.open("/home/stefl/SPhys2/text_files/datatest.txt");
-  
-
-  for(int i = 0; i<nEvents; i++){
-    eventgen >> angles[i];
-    eventgen >> pol[i];
-    }
- 
-  eventgen.close();
-  eventgen.clear();
-
-
-
-  for(int n=0;n<fNSamples;n++){
-
-    B[n]       = 0.0;
-    a_1[n]     = TComplex(0.0,0.0);
-    a_2[n]     = TComplex(0.0,0.0);
-    a_3[n]     = TComplex(0.0,0.0);
-    a_4[n]     = TComplex(0.0,0.0);
-
-    P_gamma[n] = 0.0;
-
-  }
+  ReadData(name);
 
   testPrior    = true;
   NewPrior     = false; 
@@ -687,5 +615,94 @@ TSimplePhysics::SetToCopy(int worst, int copyIndex)
 
 
 }
+
+//____________________________________________________________________
+int TSimplePhysics::GetEvents(const char* name){
+    // Read in azimuthal angles from file:
+  string line;
+  eventgen.open(name);
+  int events = 0;
+  while( getline(eventgen, line)){
+    events++;
+  }
+
+  eventgen.close();
+  eventgen.clear();
+
+  return events;
+  
+}
+//____________________________________________________________________
+void TSimplePhysics::CreateArrays(){
+  
+  angles  = new double[nEvents];
+  pol     = new double[nEvents];
+  B       = new double[fNSamples];
+  P_gamma = new double[fNSamples];
+  // Declare 2D arrays for x values.  
+  // Essentially will be x[8][fNSamples].
+
+  x       = new double*[8];
+ 
+ for (int i = 0; i < 8; i++){
+    x[i] = new double[fNSamples];
+  }
+
+  
+
+  a_1     = new TComplex[fNSamples];
+  a_2     = new TComplex[fNSamples];
+  a_3     = new TComplex[fNSamples];
+  a_4     = new TComplex[fNSamples];
+
+  // Declare & Initialise posterior arrays:
+  
+  postX      = new double*[8];
+  for (int i = 0; i < 8; i++){
+    postX[i] = new double[MAX_SAMPLES];
+  }
+
+  post_a1_Re = new double[MAX_SAMPLES];
+  post_a1_Im = new double[MAX_SAMPLES];
+  post_a2_Re = new double[MAX_SAMPLES];
+  post_a2_Im = new double[MAX_SAMPLES];
+  post_a3_Re = new double[MAX_SAMPLES];
+  post_a3_Im = new double[MAX_SAMPLES];
+  post_a4_Re = new double[MAX_SAMPLES];
+  post_a4_Im = new double[MAX_SAMPLES];
+
+  post_B     = new double[MAX_SAMPLES];
+  post_Pgam  = new double[MAX_SAMPLES];
+ 
+  for(int n=0;n<fNSamples;n++){
+
+    B[n]       = 0.0;
+    a_1[n]     = TComplex(0.0,0.0);
+    a_2[n]     = TComplex(0.0,0.0);
+    a_3[n]     = TComplex(0.0,0.0);
+    a_4[n]     = TComplex(0.0,0.0);
+
+    P_gamma[n] = 0.0;
+
+  }
+
+  
+}
+//____________________________________________________________________
+void TSimplePhysics::ReadData(const char* name){
+ eventgen.open(name);
+  
+
+  for(int i = 0; i<nEvents; i++){
+    eventgen >> angles[i];
+    eventgen >> pol[i];
+    }
+ 
+  eventgen.close();
+  eventgen.clear();
+ 
+  
+}
+
 //      End-of-file
 // ====================================================================

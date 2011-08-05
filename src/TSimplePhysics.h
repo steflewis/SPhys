@@ -148,6 +148,10 @@ protected:
   int       fIndex;
   int       sampleIndex;
  
+private:
+  int       GetEvents(const char* name);
+  void      CreateArrays();
+  void      ReadData(const char* name);
 
 };
 #endif
