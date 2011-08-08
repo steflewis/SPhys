@@ -110,5 +110,7 @@ class OclWrapper {
 		const void * ptr,
 		const VECTOR_CLASS<cl::Event> * events = NULL,
 		cl::Event * event = NULL);
+    private:
+        bool init_q;
 };
 #endif  // __OCLWRAPPER_H__

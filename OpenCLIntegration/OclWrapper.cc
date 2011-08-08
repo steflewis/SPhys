@@ -7,7 +7,7 @@
 // ----------------------------------------------------------------------------------------
 // Constructors
 // ----------------------------------------------------------------------------------------
-OclWrapper::OclWrapper (bool use_gpu) : useGPU(use_gpu), nPlatforms(0) {
+OclWrapper::OclWrapper (bool use_gpu) : useGPU(use_gpu), nPlatforms(0),init_q(false) {
 
 	    // First check the Platform
 		cl::Platform::get(&platformList);
@@ -25,7 +25,7 @@ OclWrapper::OclWrapper (bool use_gpu) : useGPU(use_gpu), nPlatforms(0) {
 		selectDevice();
     }
 
-OclWrapper::OclWrapper (bool use_gpu, int devIdx) : useGPU(use_gpu), nPlatforms(0) {
+OclWrapper::OclWrapper (bool use_gpu, int devIdx) : useGPU(use_gpu), nPlatforms(0),init_q(false) {
 
 	    // First check the Platform
 		cl::Platform::get(&platformList);
@@ -43,7 +43,7 @@ OclWrapper::OclWrapper (bool use_gpu, int devIdx) : useGPU(use_gpu), nPlatforms(
 		selectDevice(devIdx);
     }
 
-OclWrapper::OclWrapper () : nPlatforms(0) {
+OclWrapper::OclWrapper () : nPlatforms(0),init_q(false) {
 	    // First check the Platform
 		cl::Platform::get(&platformList);
 		checkErr(platformList.size() != 0 ? CL_SUCCESS : -1, "cl::Platform::get");
@@ -284,14 +284,19 @@ void OclWrapper::loadKernel(const char* kname) {
 void OclWrapper::createQueue() {
     //std::cout << "Device: "<<deviceIdx<<"\n";
     // Create the CommandQueue
-	queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
-
+    if (not init_q) {
+        queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
+        init_q=true;
+    }
     checkErr(err, "CommandQueue::CommandQueue()");
 }
 
 cl::KernelFunctor OclWrapper::enqueueNDRange(const cl::NDRange& globalRange,const cl::NDRange& localRange) {
 	// Create the CommandQueue
-	queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
+    if (!init_q) {
+	    queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
+        init_q=true;
+    }
 	checkErr(err, "CommandQueue::CommandQueue()");
 	return kernel_p->bind(*queue_p,globalRange, localRange);
 }
