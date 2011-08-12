@@ -82,3 +82,24 @@ TSimplePhysics::LogLhood (float B, float Pg)
 }
 
 //____________________________________________________________________
+void TSimplePhysics_GPU::InitOpenCL()
+{
+  wrapper = new OclWrapper(true);
+  
+  wrapper->loadKernel("Likelihood2.cl",likelihood);
+    // Create OpenCL Arrays
+
+  size_t array_size = sizeof(float)*nEvents;
+
+  cl_B = wrapper->makeReadBuffer(1);
+  cl_Pg = wrapper->makeReadBuffer(1);
+  cl_angles = wrapper->makeReadBuffer(array_size);
+  cl_pols = wrapper->makeReadBuffer(array_size);
+  cl_LogL = wrapper->makeWriteBuffer(1);
+
+  wrapper->writeBuffer(cl_angles,array_size,angles);
+  wrapper->writeBuffer(cl_pols,array_size,pols);
+ 
+ 
+}
+//____________________________________________________________________
