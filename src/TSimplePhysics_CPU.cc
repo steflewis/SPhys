@@ -46,7 +46,7 @@ TSimplePhysics_CPU::TSimplePhysics_CPU(int numberOfObjects, double logWidth):TSi
 }
 //____________________________________________________________________
 float
-TSimplePhysics_CPU::LogLhood (float B, float Pg)
+TSimplePhysics_CPU::LogLhood (float B_loc, float Pg_loc)
 {
 
   //===================================================//
@@ -75,7 +75,7 @@ TSimplePhysics_CPU::LogLhood (float B, float Pg)
 
   for (int i = 0; i < nEvents; i++){
     
-    costerm = Pg*B*cos(2*angles[i]);
+    costerm = Pg_loc*B_loc*cos(2*angles[i]);
     localpol = pol[i];
 
     // Calculate A_tilde for each angle

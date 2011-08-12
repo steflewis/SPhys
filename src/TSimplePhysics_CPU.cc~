@@ -45,8 +45,8 @@ TSimplePhysics_CPU::TSimplePhysics_CPU(int numberOfObjects, double logWidth):TSi
   
 }
 //____________________________________________________________________
-double
-TSimplePhysics_CPU::LogLhood (double B, double Pg)
+float
+TSimplePhysics_CPU::LogLhood (float B_loc, float Pg_loc)
 {
 
   //===================================================//

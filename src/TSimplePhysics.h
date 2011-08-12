@@ -59,7 +59,7 @@ public:
   virtual void     UpdatedPrior();
 
   // logLikelihood function
-  virtual float    LogLhood (float B, float Pg);
+  virtual float    LogLhood (float B_loc, float Pg_loc);
         
   // Evolve object within likelihood constraint
   virtual void     Explore (double logLstar, int sampleIndex);

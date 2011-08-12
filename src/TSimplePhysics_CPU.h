@@ -39,7 +39,7 @@ public:
   
   TSimplePhysics_CPU(int numberOfObjects, double logWidth);
   
-  float LogLhood(float B, float Pg);
+  float LogLhood(float B_loc, float Pg_loc);
   
   // Attributes:
   // all should be inherited from TSimplePhysics  
