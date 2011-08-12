@@ -12,8 +12,8 @@
 //      This determines the most likely value for the B observable.
 //
 // ==================================================================== 
-#ifndef sconsNS4_TSimplePhysics
-#define sconsNS4_TSimplePhysics
+#ifndef TSIMPLEPHYSICS_H
+#define TSIMPLEPHYSICS_H
 
 #include "TROOT.h"
 #include "TTree.h"

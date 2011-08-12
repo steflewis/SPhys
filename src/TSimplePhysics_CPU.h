@@ -13,8 +13,8 @@
 //      Uses standard CPU processing power.
 //
 // ==================================================================== 
-// #ifndef sconsNS4_TSimplePhysics
-// #define sconsNS4_TSimplePhysics
+#ifndef TSIMPLEPHYSICS_CPU_H
+#define TSIMPLEPHYSICS_CPU_H
 
 #include "TSimplePhysics.h"
 #include "TNestedSample.h"
@@ -44,7 +44,7 @@ public:
   // Attributes:
   // all should be inherited from TSimplePhysics  
 };
-// #endif
+#endif
 
 
 //      End-of-file

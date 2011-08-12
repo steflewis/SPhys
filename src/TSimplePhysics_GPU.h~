@@ -13,8 +13,8 @@
 //      Uses GPU programming (OpenCL).
 //
 // ==================================================================== 
-#ifndef sconsNS4_TSimplePhysics
-#define sconsNS4_TSimplePhysics
+#ifndef TSIMPLEPHYSICS_GPU_H
+#define TSIMPLEPHYSICS_GPU_H
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -54,10 +54,14 @@ public:
   
   TSimplePhysics_GPU(int numberOfObjects, double logWidth);
   
-  float LogLhood(double B, double Pg);
+  float LogLhood(float B, float Pg);
   
   // Attributes:
   OclWrapper *wrapper;
+  
+private:
+  
+  InitOpenCL();
   
 };
 #endif

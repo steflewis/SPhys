@@ -4,7 +4,7 @@
 //      Project: sconsNS2
 //               ~~~~~~
 //  
-//      File: TSimplePhysics_CPU.cc
+//      File: TSimplePhysics_GPU.cc
 //            ~~~~~~~~~~~~~~~~~~~
 //
 //      Description:     See TSimplePhysics.h
@@ -23,78 +23,61 @@
 //
 //
 // ==================================================================== 
-#ifndef sconsNS2_TSimplePhysics_CPU
-#include "TSimplePhysics_CPU.h"
-#endif
 using namespace std;
 //____________________________________________________________________
 
 //____________________________________________________________________
-TSimplePhysics_CPU::TSimplePhysics_CPU()
+TSimplePhysics_GPU::TSimplePhysics_GPU()
 {
   
   // Default constructor
 
 }
 //_____________________________________________________________________
-TSimplePhysics_CPU::TSimplePhysics_CPU(int numberOfObjects, double logWidth) : TSimplePhysics(numberOfObjects, logWidth)
+TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth) : TSimplePhysics(numberOfObjects, logWidth)
 {
-  
-  
+
+  InitOpenCL();
   
 }
 //____________________________________________________________________
-double
-TSimplePhysics::LogLhood (double B, double Pg)
+float
+TSimplePhysics::LogLhood (float B, float Pg)
 {
-
-  //===================================================//
-  // Method development notes -                        //
-  //                                                   //
-  // Weak decay constant set to non-diluted value.     //
-  // Need to somewhere declare/initialise these:       //
-  // -- T                                              //
-  // -- R    (guessing prior! and passed as arg)       //
-  // -- csy  (think this is from input file)           //
-  //                                                   //
-  //===================================================//
+  // Variable Declarations
+//  unsigned int num = 3000;
   
-  // logLikelihood function
-  // P_gamma         = 0.8;
-  delta_L         = 0;
-  double LogL     = 0.0;
-  double costerm  = 0.0;
-  double prob     = 0.0;   // Probability
-  double A_tilde;
-  double localpol = 0.0;
-
-  // For use of log base 2:
-  double LogL_2   = 0.0;
-  //double A_temp;
-
-  for (int i = 0; i < nEvents; i++){
-    
-    costerm = Pg*B*cos(2*angles[i]);
-    localpol = pol[i];
-
-    // Calculate A_tilde for each angle
-    A_tilde = ( costerm + delta_L )  / ( 1 + (costerm*delta_L) ) ;
-    
-   // Polarisation of 0 corresponds to PERP
-    if ( localpol < 0 ){
-        prob = 0.5*(1 + A_tilde);
-    }
-
-    // Polarisation of 1 corresponds to PARA
-    else if ( localpol >= 0 ){
-      prob = 0.5*(1 - A_tilde);
-    }
-    LogL_2 += log2(prob);
+  //size_t array_size = sizeof(double)*fNSamples;
 
  
-  }
-  LogL = LogL_2 / Log2e;
-  return LogL;
+  // Set kernel arguments - how?
+/*  err = kernel.setArg(0, cl_B);
+  err = kernel.setArg(1, cl_Pg);
+  err = kernel.setArg(2, cl_LogL);
+
+  // Constant arguments:
+  err = kernel.setArg(3, Log2e);
+
+  cl::Event event;*/
+  
+  // Create command queue
+  //wrapper->createQueue();
+  
+  // Push CPU arrays to GPU
+  wrapper->writeBuffer(cl_B,1,B);
+  wrapper->writeBuffer(cl_Pg,1,Pg);
+/*  wrapper->writeBuffer(cl_angles,array_size,angles);
+  wrapper->writeBuffer(cl_pols,array_size,pols);
+ */ 
+  
+  
+  // Execute kernel
+  
+  wrapper->enqueueNDRange(cl::NDRange(nEvents), cl::NullRange);
+   
+  // Enqueue read buffers
+  wrapper->readBuffer(cl_LogL,1,LogL);
+  
 
 }
 

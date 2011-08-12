@@ -1,4 +1,5 @@
 from init_env import init_environment
+#from optparse import OptionParser
 
 env = init_environment("root")
 
@@ -9,10 +10,14 @@ env.Append(CPPPATH = incpath)
 
 env.Append(CXXFLAGS = '-g3')
 
+#AddOption('--GPU',)
+
+
+
 env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc','src/TPlotter.cc'])  
 
 env.Library('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc','src/TPlotter.cc'])  

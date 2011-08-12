@@ -13,8 +13,8 @@
 //      Uses GPU programming (OpenCL).
 //
 // ==================================================================== 
-#ifndef sconsNS4_TSimplePhysics
-#define sconsNS4_TSimplePhysics
+#ifndef TSIMPLEPHYSICS_GPU_H
+#define TSIMPLEPHYSICS_GPU_H
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -58,6 +58,10 @@ public:
   
   // Attributes:
   OclWrapper *wrapper;
+  
+private:
+  
+  void InitOpenCL();
   
 };
 #endif
