@@ -38,7 +38,7 @@ TSimplePhysics_CPU::TSimplePhysics_CPU()
 
 }
 //_____________________________________________________________________
-TSimplePhysics_CPU::TSimplePhysics_CPU(int numberOfObjects, double logWidth):TSimplePhysics(numberOfObjects, logWidth)
+TSimplePhysics_CPU::TSimplePhysics_CPU(int numberOfObjects, double logWidth, char* name):TSimplePhysics(numberOfObjects, logWidth, name)
 {
   
   

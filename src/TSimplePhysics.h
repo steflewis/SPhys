@@ -12,8 +12,8 @@
 //      This determines the most likely value for the B observable.
 //
 // ==================================================================== 
-#ifndef sconsNS4_TSimplePhysics
-#define sconsNS4_TSimplePhysics
+#ifndef TSIMPLEPHYSICS_H
+#define TSIMPLEPHYSICS_H
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -38,7 +38,7 @@
 const double pi = M_PI;
 const double weak = 0.642;       // weak decay constant
 const double dilution = -0.256;  // sigma dilution
- 
+const double    Log2e = log2(TMath::E());
 
 class TSimplePhysics : public TNestedSample {
 
@@ -51,7 +51,7 @@ public:
   TSimplePhysics();
   ~TSimplePhysics() {};
 
-  TSimplePhysics(int numberOfObjects, double logWidth);
+  TSimplePhysics(int numberOfObjects, double logWidth, char* name);
     
   // Set object according to uniform prior
   virtual void     Prior (int fIndex);
@@ -92,7 +92,7 @@ public:
   
   double   *B;          // array[nSamples] holding prior values of B
 
-  double    Log2e;
+//  const double    Log2e = log2(TMath::E());
 
   // LogLhood() Variables:
   ifstream  eventgen;   // File containing azimuthal angles for each event

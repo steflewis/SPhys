@@ -38,26 +38,27 @@ TSimplePhysics::TSimplePhysics()
 }
 //_____________________________________________________________________
 // Second constructor
-TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth):TNestedSample(numberOfObjects, logWidth)
+TSimplePhysics::TSimplePhysics(int numberOfObjects, double logWidth, char* name):TNestedSample(numberOfObjects, logWidth, name)
+,nEvents(0), NewPrior(false), testPrior(true),fIndex(0), sampleIndex(0)
 {
 
   
   // Determine number of events:
-  const char* name = "/home/Stefanie/NestedSampling/CPU_GPU/text_files/datatest.txt";
+  //const char* name = "/home/stefl/NestedSampling/CPU_GPU/text_files/datatest.txt";
   
   nEvents = 0;
   
-  nEvents = GetEvents(name);
+  nEvents = GetEvents(fDataFile);
 
   CreateArrays();
   
-  ReadData(name);
-
+  ReadData(fDataFile);
+/*
   testPrior    = true;
   NewPrior     = false; 
   fIndex       = 0;
   sampleIndex  = 0;
-  Log2e        = log2(TMath::E());
+  Log2e        = log2(TMath::E());*/
 
 /*  // Set up OpenCL kernel stuff
   // Need to instantiate an instance of the OclWrapper class - do this in TSimplePhysics constructor.
