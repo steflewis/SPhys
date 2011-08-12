@@ -44,24 +44,6 @@ TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth) : T
 float
 TSimplePhysics::LogLhood (float B, float Pg)
 {
-  // Variable Declarations
-//  unsigned int num = 3000;
-  
-  //size_t array_size = sizeof(double)*fNSamples;
-
- 
-  // Set kernel arguments - how?
-/*  err = kernel.setArg(0, cl_B);
-  err = kernel.setArg(1, cl_Pg);
-  err = kernel.setArg(2, cl_LogL);
-
-  // Constant arguments:
-  err = kernel.setArg(3, Log2e);
-
-  cl::Event event;*/
-  
-  // Create command queue
-  //wrapper->createQueue();
   
   // Push CPU arrays to GPU
   wrapper->writeBuffer(cl_B,sizeof(float),B);
