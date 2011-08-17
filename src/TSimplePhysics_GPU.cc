@@ -23,7 +23,9 @@
 //
 //
 // ==================================================================== 
+#include "TSimplePhysics_GPU.h"
 using namespace std;
+
 //____________________________________________________________________
 
 //____________________________________________________________________
@@ -34,7 +36,7 @@ TSimplePhysics_GPU::TSimplePhysics_GPU()
 
 }
 //_____________________________________________________________________
-TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth) : TSimplePhysics(numberOfObjects, logWidth)
+TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename) : TSimplePhysics(numberOfObjects, logWidth, filename)
 {
 
   InitOpenCL();
@@ -42,12 +44,21 @@ TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth) : T
 }
 //____________________________________________________________________
 float
-TSimplePhysics::LogLhood (float B, float Pg)
+TSimplePhysics_GPU::LogLhood (float B, float Pg)
 {
   
+  float LogL[1];
+  
   // Push CPU arrays to GPU
-  wrapper->writeBuffer(cl_B,sizeof(float),B);
-  wrapper->writeBuffer(cl_Pg,sizeof(float),Pg);
+  float B_array[1];
+  B_array[0]=B;
+  
+  float Pg_array[1];
+  Pg_array[0]=Pg;
+  
+  
+  wrapper->writeBuffer(cl_B,sizeof(float),B_array);
+  wrapper->writeBuffer(cl_Pg,sizeof(float),Pg_array);
 /*  wrapper->writeBuffer(cl_angles,array_size,angles);
   wrapper->writeBuffer(cl_pols,array_size,pols);
  */ 
@@ -69,19 +80,19 @@ void TSimplePhysics_GPU::InitOpenCL()
 {
   wrapper = new OclWrapper(true);
   
-  wrapper->loadKernel("Likelihood2.cl",likelihood);
+  wrapper->loadKernel("Likelihood2.cl","Likelihood2");
     // Create OpenCL Arrays
 
   size_t array_size = sizeof(float)*nEvents;
 
-  cl_B = wrapper->makeReadBuffer(sizeof(float));
+  cl_B = wrapper->makeReadBuffer((int)sizeof(float),NULL, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR);
   cl_Pg = wrapper->makeReadBuffer(sizeof(float));
   cl_angles = wrapper->makeReadBuffer(array_size);
   cl_pols = wrapper->makeReadBuffer(array_size);
   cl_LogL = wrapper->makeWriteBuffer(sizeof(float));
 
   wrapper->writeBuffer(cl_angles,array_size,angles);
-  wrapper->writeBuffer(cl_pols,array_size,pols);
+  wrapper->writeBuffer(cl_pols,array_size,pol);
  
  
 }

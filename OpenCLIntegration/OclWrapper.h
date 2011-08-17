@@ -61,6 +61,7 @@ class OclWrapper {
 	public:
 		cl::Context* context_p;
 		cl::Kernel* kernel_p;
+		cl::KernelFunctor kernel_functor;
 		cl::CommandQueue* queue_p;
 		int nPlatforms;
 		DeviceInfo deviceInfo;
@@ -90,7 +91,7 @@ class OclWrapper {
 	    cl::Buffer& makeWriteBuffer( int bufSize );
 	    cl::Buffer& makeReadBuffer(int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR);
 		void createQueue();
-		cl::KernelFunctor enqueueNDRange(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
+		void enqueueNDRange(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
 		void readBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
 		void readBuffer(
 		const cl::Buffer& buffer,
@@ -110,7 +111,5 @@ class OclWrapper {
 		const void * ptr,
 		const VECTOR_CLASS<cl::Event> * events = NULL,
 		cl::Event * event = NULL);
-    private:
-        bool init_q;
 };
 #endif  // __OCLWRAPPER_H__

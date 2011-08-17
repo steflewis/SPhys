@@ -32,7 +32,7 @@
 // #include "TRandom.h"
 // #include "TMath.h"
 // #include <TFile.h>
-#include "TSimplePhysics_CPU.h"
+#include "TSimplePhysics_GPU.h"
 #include "TPlotter.h"
 #include <math.h>
 #include <iostream>
@@ -79,7 +79,7 @@ int main(void)
 {
 
 
-  TSimplePhysics_CPU *LH = new TSimplePhysics_CPU(noSamples,logWidth, datafile);
+  TSimplePhysics_GPU *LH = new TSimplePhysics_GPU(noSamples,logWidth, datafile);
   
   TPlotter *plot = new TPlotter(prior_file,posterior,noSamples);
 
