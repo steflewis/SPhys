@@ -13,8 +13,10 @@
 //      Uses GPU programming (OpenCL).
 //
 // ==================================================================== 
-#ifndef sconsNS4_TSimplePhysics
-#define sconsNS4_TSimplePhysics
+#ifndef TSIMPLEPHYSICS_GPU_H
+#define TSIMPLEPHYSICS_GPU_H
+
+#include "OclWrapper.h"
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -28,7 +30,7 @@
 
 #include "TNestedSample.h"
 #include "TSimplePhysics.h"
-#include "OclWrapper.h"
+
 #include <math.h>
 #include <iostream>
 #include <fstream>
@@ -37,27 +39,27 @@
 
 
 //Variable for value of pi:
-const double pi = M_PI;
-const double weak = 0.642;       // weak decay constant
-const double dilution = -0.256;  // sigma dilution
- 
 
 class TSimplePhysics_GPU : public TSimplePhysics {
 
   
 public:
+  // Attributes:
+  OclWrapper *wrapper;
   
   // Methods:
   
   TSimplePhysics_GPU();
   ~TSimplePhysics_GPU() {};
   
-  TSimplePhysics_GPU(int numberOfObjects, double logWidth);
+  TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename);
   
-  float LogLhood(double B, double Pg);
+  float LogLhood(float B, float Pg);
   
-  // Attributes:
-  OclWrapper *wrapper;
+  
+private:
+  
+  void InitOpenCL();
   
 };
 #endif

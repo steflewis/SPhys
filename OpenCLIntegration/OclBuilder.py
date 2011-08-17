@@ -137,7 +137,7 @@ def build(appname,sources):
             env['CPPPATH']=[OPENCL_DIR,INTEL_SDK_PATH+'/include/CL']
             env['LIBPATH']=[INTEL_SDK_PATH+'/lib64']
         else:
-            env['CPPPATH']=[OPENCL_DIR,NVIDIA_SDK_PATH+'/OpenCL/common/inc']
+            env['CPPPATH']=[OPENCL_DIR,OPENCL_DIR+'/CL',NVIDIA_SDK_PATH+'/OpenCL/common/inc']
     if buildLibrary=='1':        
         env.Library('OclWrapper',oclsources)
     else:        

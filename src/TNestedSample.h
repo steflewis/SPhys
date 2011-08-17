@@ -20,8 +20,8 @@
 //      $Id$ 
 //
 // ==================================================================== 
-#ifndef sconsNS4_TNestedSample
-#define sconsNS4_TNestedSample
+#ifndef TNESTEDSAMPLE_H
+#define TNESTEDSAMPLE_H
 
 #define MAX_SAMPLES 1200000
 using namespace std;

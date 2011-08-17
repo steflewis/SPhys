@@ -340,9 +340,9 @@ TSimplePhysics::UpdatedPrior()
 }
 //____________________________________________________________________
 float
-TSimplePhysics::LogLhood (float B, float Pg)
+TSimplePhysics::LogLhood (float B_loc, float Pg_loc)
 {
- return B*Pg;
+ return B_loc*Pg_loc;
   
 }
 
@@ -612,7 +612,7 @@ TSimplePhysics::SetToCopy(int worst, int copyIndex)
   a_4[worst]     = a_4[copyIndex];
 
   B[worst]       = B[copyIndex];
-  P_gamma[worst] = P_gamma[worst];
+  P_gamma[worst] = P_gamma[copyIndex];
 
 
 }

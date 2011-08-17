@@ -346,6 +346,34 @@ void OclWrapper::readBuffer(const cl::Buffer& deviceBuf, bool blocking_read,
 			checkErr(err, "CommandQueue::enqueueReadBuffer()");
 
 		}
+void OclWrapper::writeBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf) {
+
+	err = queue_p->enqueueWriteBuffer(
+	            deviceBuf,
+	            CL_TRUE,
+	            0,
+	            bufSize,
+	            hostBuf);
+    checkErr(err, "CommandQueue::enqueueWriteBuffer()");
+
+}
+
+void OclWrapper::writeBuffer(const cl::Buffer& deviceBuf, bool blocking_write,
+		::size_t offset, ::size_t bufSize, void * hostBuf,
+		const VECTOR_CLASS<cl::Event> * events,
+		cl::Event * event) {
+			err = queue_p->enqueueWriteBuffer(
+					deviceBuf,
+					blocking_write,
+					offset,
+					bufSize,
+					hostBuf,
+					events,
+					event);
+
+			checkErr(err, "CommandQueue::enqueueWriteBuffer()");
+
+		}
 
 // ----------------------------------------------------------------------------------------
 // Private methods

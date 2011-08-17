@@ -32,7 +32,8 @@
 // #include "TRandom.h"
 // #include "TMath.h"
 // #include <TFile.h>
-#include "TSimplePhysics_CPU.h"
+#include "TSimplePhysics_GPU.h"
+#include "TPlotter.h"
 #include <math.h>
 #include <iostream>
 #include <cstdlib>
@@ -63,6 +64,10 @@ int verbose = 1;
 
 bool Updated = false;  // Set to true if using previous posterior 
                        // to generate new prior.
+                       
+char plotBsave[] = "B_prior_post_TPlotter_test.png";
+char plotPBsave[] = "PB_prior_post_TPlotter_test.png";
+char prior_file[] = "oldprior.txt";
 
 
 /************************************************************************
@@ -74,7 +79,9 @@ int main(void)
 {
 
 
-  TSimplePhysics_CPU *LH = new TSimplePhysics_CPU(noSamples,logWidth, datafile);
+  TSimplePhysics_GPU *LH = new TSimplePhysics_GPU(noSamples,logWidth, datafile);
+  
+  TPlotter *plot = new TPlotter(prior_file,posterior,noSamples);
 
 
 
@@ -118,6 +125,11 @@ int main(void)
 
   LH->PrintSummary(posterior);
   printf("Print Summary complete\n"); 
+  
+  // Make plots
+  plot->PlotPriorPost(true,plotBsave);
+  
+  plot->PlotPB(true,plotPBsave);
 
   return 0;
 
