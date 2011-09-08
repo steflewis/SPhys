@@ -87,21 +87,6 @@ int main(void)
 
   if (verbose == 1)
     printf("Start of main function.  logWidth is %g\n",logWidth);
-
-  // if (testing == 1){
-  //   ifstream fin;
-  //   fin.open("/home/stefl/examples/sivia/siviavalues.txt");
-  //   double NewX[noSamples];
-  //   double NewY[noSamples];
-  //   double NewLogL[noSamples];
-
-
-  //   int y = 0;
-  //   while(!fin.eof()){
-  //     fin >> NewX[y] >> NewY[y] >> NewLogL[y];
-  //     y++;
-  //   }
-  // }
   
 
   //Set Prior
