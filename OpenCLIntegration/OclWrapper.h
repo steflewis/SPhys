@@ -108,7 +108,7 @@ class OclWrapper {
 				bool blocking_write,
 				::size_t offset,
 				::size_t size,
-				const void * ptr,
+				void * ptr,
 				const VECTOR_CLASS<cl::Event> * events = NULL,
 				cl::Event * event = NULL);
 };
