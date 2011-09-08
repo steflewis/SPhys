@@ -17,7 +17,7 @@ def getOpt(optname,desc,default):
         print "No such option: "+optname
 
 opts=Variables()   
-dev=getOpt('dev','Device','GPU')
+dev=getOpt('dev','Device','CPU')
 
 print "Device selected: "+dev
 
@@ -41,7 +41,7 @@ if dev=='GPU':
 else:
   env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc','src/TPlotter.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc']) #,'src/TPlotter.cc'])  
   
 #env.Library('usercode', ['src/TUserCode.cc',
 #		     'src/TNestedSample.cc', 

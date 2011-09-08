@@ -375,6 +375,7 @@ void OclWrapper::writeBuffer(const cl::Buffer& deviceBuf, bool blocking_write,
 
 		}
 
+void OclWrapper::doNothing() {}
 // ----------------------------------------------------------------------------------------
 // Private methods
 // ----------------------------------------------------------------------------------------

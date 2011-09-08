@@ -17,7 +17,7 @@ def getOpt(optname,desc,default):
         print "No such option: "+optname
 
 opts=Variables()   
-dev=getOpt('dev','Device','GPU')
+dev=getOpt('dev','Device','CPU')
 
 print "Device selected: "+dev
 
