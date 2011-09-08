@@ -88,19 +88,19 @@ class OclWrapper {
 		void loadKernel(const char* ksource, const char* kname, const char* opts);
 		void loadBinary(const char* ksource);
 		void storeBinary(const char* ksource);
-	    cl::Buffer& makeWriteBuffer( int bufSize );
-	    cl::Buffer& makeReadBuffer(int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR);
+		cl::Buffer& makeWriteBuffer( int bufSize );
+		cl::Buffer& makeReadBuffer(int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR);
 		void createQueue();
 		void enqueueNDRange(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
 		void readBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
 		void readBuffer(
-		const cl::Buffer& buffer,
-		bool blocking_read,
-		::size_t offset,
-		::size_t size,
-		void * ptr,
-		const VECTOR_CLASS<cl::Event> * events = NULL,
-		cl::Event * event = NULL);
+				const cl::Buffer& buffer,
+				bool blocking_read,
+				::size_t offset,
+				::size_t size,
+				void * ptr,
+				const VECTOR_CLASS<cl::Event> * events = NULL,
+				cl::Event * event = NULL);
 
 		void writeBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
 		void writeBuffer(

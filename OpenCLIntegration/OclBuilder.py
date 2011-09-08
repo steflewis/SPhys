@@ -55,7 +55,7 @@ def build(appname,sources):
         OSX=0
         OSFLAG='-D__LINUX__'
 
-    OPENCL_DIR=os.environ['OPENCL_DIR']
+    OPENCL_DIR='.' #os.environ['OPENCL_DIR']
     opts=Variables()        
 
     args=sys.argv[1:]
