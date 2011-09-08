@@ -139,6 +139,6 @@ def build(appname,sources):
         else:
             env['CPPPATH']=[OPENCL_DIR,OPENCL_DIR+'/CL',NVIDIA_SDK_PATH+'/OpenCL/common/inc']
     if buildLibrary=='1':        
-        env.Library('OclWrapper',oclsources)
+        env.SharedLibrary('OclWrapper',oclsources)
     else:        
         env.Program(appname+'_'+dev+'_'+plat+'_'+kernel,oclsources+sources)
