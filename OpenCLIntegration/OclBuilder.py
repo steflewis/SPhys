@@ -33,7 +33,7 @@ def build(appname,sources):
     
     help = """
     Options:
-    lib=0|1 [0] build an OclWrapper library
+    lib=0|1 [1] build an OclWrapper library
     plat=AMD|NVIDIA|Intel [NVIDIA]
     dev=CPU|GPU [GPU] device
     kernel=<number> [1]   
@@ -63,7 +63,7 @@ def build(appname,sources):
         if re.match("(\w+)=(\w+)",arg):
             (k,v)=arg.split('=')
             opts.args[k]=v
-    buildLibrary=getOpt('lib','buildLibrary',0)
+    buildLibrary=getOpt('lib','buildLibrary','1')
     dev=getOpt('dev','Device','GPU')
     plat=getOpt('plat','Platform','NVIDIA')
     if plat=='AMD':      
