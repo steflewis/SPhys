@@ -104,13 +104,12 @@ class OclWrapper {
 
 		void writeBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
 		void writeBuffer(
-		const cl::Buffer& deviceBuf,
-		bool blocking_write,
-		::size_t offset,
-		::size_t size,
-		const void * ptr,
-		const VECTOR_CLASS<cl::Event> * events = NULL,
-		cl::Event * event = NULL);
-		void doNothing();
+				const cl::Buffer& deviceBuf,
+				bool blocking_write,
+				::size_t offset,
+				::size_t size,
+				void * ptr,
+				const VECTOR_CLASS<cl::Event> * events = NULL,
+				cl::Event * event = NULL);
 };
 #endif  // __OCLWRAPPER_H__

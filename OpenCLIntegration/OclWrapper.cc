@@ -373,10 +373,8 @@ void OclWrapper::writeBuffer(const cl::Buffer& deviceBuf, bool blocking_write,
 			event);
 
 	checkErr(err, "CommandQueue::enqueueWriteBuffer()");
+
 }
-
-void OclWrapper::doNothing() {}
-
 // ----------------------------------------------------------------------------------------
 // Private methods
 // ----------------------------------------------------------------------------------------
