@@ -3,8 +3,11 @@
 #include <map>
 #include <string>
 #include <iostream>
+#ifdef OSX
 #include "cl.hpp"
-
+#else
+#include "CL/cl.hpp"
+#endif
 
 class PlatformInfo {
     private:
