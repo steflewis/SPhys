@@ -56,11 +56,13 @@ TSimplePhysics_GPU::LogLhood (float B, float Pg)
   float Pg_array[1];
   Pg_array[0]=Pg;
   
-  wrapper->doNothing(); //debugging  
+wrapper->doNothing(); //debugging  
   wrapper->writeBuffer(cl_B,sizeof(float),B_array);
   wrapper->writeBuffer(cl_Pg,sizeof(float),Pg_array);
-//  wrapper->writeBuffer(cl_angles,array_size,angles);
-//  wrapper->writeBuffer(cl_pols,array_size,pols);
+/*  wrapper->writeBuffer(cl_angles,array_size,angles);
+  wrapper->writeBuffer(cl_pols,array_size,pols);
+ */ 
+  
   
   // Execute kernel
   
@@ -69,7 +71,7 @@ TSimplePhysics_GPU::LogLhood (float B, float Pg)
    
   // Enqueue read buffers
   wrapper->readBuffer(cl_LogL,sizeof(float),LogL);
-  return LogL[0]; 
+  
 
 }
 
@@ -83,8 +85,8 @@ void TSimplePhysics_GPU::InitOpenCL()
 
   size_t array_size = sizeof(float)*nEvents;
 
-  cl_B = wrapper->makeReadBuffer((int)sizeof(float));//,NULL, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR);
-  cl_Pg = wrapper->makeReadBuffer((int)sizeof(float));
+  cl_B = wrapper->makeReadBuffer((int)sizeof(float),NULL, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR);
+  cl_Pg = wrapper->makeReadBuffer(sizeof(float));
   cl_angles = wrapper->makeReadBuffer(array_size);
   cl_pols = wrapper->makeReadBuffer(array_size);
   cl_LogL = wrapper->makeWriteBuffer(sizeof(float));

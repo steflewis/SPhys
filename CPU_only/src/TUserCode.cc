@@ -32,7 +32,7 @@
 // #include "TRandom.h"
 // #include "TMath.h"
 // #include <TFile.h>
-#include "TSimplePhysics_GPU.h"
+#include "TSimplePhysics_CPU.h"
 #ifdef PLOT
 #include "TPlotter.h"
 #endif
@@ -55,11 +55,11 @@ const int noSamples = 3000;  //Set number of objects.
 //Set filenames to be used for posterior file.  Not to exceed
 //50 characters, should include .root and should conform to all filename rules.
 
-char posterior[] = "SPhys_vCPU_test1.root";
+char posterior[] = "SPhys_CPU_test1.root";
 
 double logWidth = log(1.0 - exp(-1.0 / noSamples));
 
-char datafile[] = "/home/stefl/NestedSampling/CPU_GPU/text_files/datatest.txt";
+char datafile[] = "datatest.txt";
 
 int testing = 0;   //Change to 1 when testing.
 int verbose = 1;
@@ -81,7 +81,7 @@ int main(void)
 {
 
 
-  TSimplePhysics_GPU *LH = new TSimplePhysics_GPU(noSamples,logWidth, datafile);
+  TSimplePhysics_CPU *LH = new TSimplePhysics_CPU(noSamples,logWidth, datafile);
 #ifdef PLOT
   TPlotter *plot = new TPlotter(prior_file,posterior,noSamples);
 #endif
