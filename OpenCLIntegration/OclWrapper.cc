@@ -303,7 +303,7 @@ cl::Buffer& OclWrapper::makeWriteBuffer(int bufSize) {
 	            *context_p,
 	            CL_MEM_WRITE_ONLY,
 	            bufSize,NULL,&err);
-	 checkErr(err, "Buffer::Buffer()");
+	 checkErr(err, "makeWriteBuffer()");
 	 cl::Buffer& buf_r =*buf_p;
 	return buf_r;
 }
@@ -313,7 +313,7 @@ cl::Buffer& OclWrapper::makeReadBuffer(int bufSize,void* hostBuf, cl_mem_flags f
 	            *context_p,
 	            flags,
 	            bufSize,hostBuf,&err);
-	 checkErr(err, "Buffer::Buffer()");
+	 checkErr(err, "makeReadBuffer()");
 	 cl::Buffer& buf_r =*buf_p;
 	return buf_r;
 }
