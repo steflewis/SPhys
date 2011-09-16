@@ -1,0 +1,157 @@
+{
+  
+  gROOT->Reset();
+  gStyle->SetPalette(1);
+  gStyle->SetFrameFillStyle(0);
+  gStyle->SetFrameBorderMode(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  
+  gStyle->SetFrameBorderMode(0);
+  gStyle->SetFrameFillStyle(0);
+  gStyle->SetFillStyle(0);
+  
+  
+  
+  const int fNSamples = 3000;
+  
+  double B[fNSamples]; 
+  //double P_gamma[fNSamples];
+  double R[fNSamples];
+  double T[fNSamples];
+  double Ox[fNSamples];
+  double Oz[fNSamples];
+  
+  // Declare 2D arrays for x values.  
+  // Essentially will be x[8][fNSamples].
+  
+  double x[8][fNSamples];
+  
+  //for (int i = 0; i < 8; i++){
+    // x[i] = new double[fNSamples];
+  //}
+  
+  TComplex a_1[fNSamples];
+  TComplex a_2[fNSamples];
+  TComplex a_3[fNSamples];
+  TComplex a_4[fNSamples];
+  
+  TH1F *priorB    = new TH1F("priorB"  , "B" , 100, -1.1, 1.1);
+  TH1F *priorR    = new TH1F("priorR"  , "R" , 100, -1.1, 1.1);
+  TH1F *priorT    = new TH1F("priorT"  , "T" , 100, -1.1, 1.1);
+  TH1F *priorOx   = new TH1F("priorOx"  , "Ox" , 100, -1.1, 1.1);
+  TH1F *priorOz   = new TH1F("priorOz"  , "Oz" , 100, -1.1, 1.1);
+  
+  double rSquared;
+  
+  for(int fIndex = 0; fIndex < fNSamples; fIndex++){
+    
+    rSquared     = 0;
+    for (int i = 0; i < 8; i++) {
+      
+      x[i][fIndex] = gRandom->Gaus();
+      rSquared    += x[i][fIndex]*x[i][fIndex];
+      
+    }
+    
+    for (int i = 0; i < 8; i++) {
+      x[i][fIndex] /= TMath::Sqrt(rSquared);
+    }
+    
+    
+    a_1[fIndex] = TComplex(x[0][fIndex],x[1][fIndex]);
+    a_2[fIndex] = TComplex(x[2][fIndex],x[3][fIndex]);
+    a_3[fIndex] = TComplex(x[4][fIndex],x[5][fIndex]);
+    a_4[fIndex] = TComplex(x[6][fIndex],x[7][fIndex]);
+    
+    B[fIndex]   = (a_1[fIndex].Rho2()) + (a_2[fIndex].Rho2()) - (a_3[fIndex].Rho2()) - (a_4[fIndex].Rho2());
+    
+    R[fIndex]   = (a_1[fIndex].Rho2()) - (a_2[fIndex].Rho2()) + (a_3[fIndex].Rho2()) - (a_4[fIndex].Rho2());
+    
+    T[fIndex]   = (a_1[fIndex].Rho2()) - (a_2[fIndex].Rho2()) - (a_3[fIndex].Rho2()) + (a_4[fIndex].Rho2());
+    
+    TComplex tempOx = ((a_1[fIndex])*(TComplex::Conjugate(a_4[fIndex]))) - ((a_2[fIndex])*(TComplex::Conjugate(a_3[fIndex])));
+    Ox[fIndex]  = 2 * (tempOx.Re());
+    
+    TComplex tempOz = ((a_1[fIndex])*(TComplex::Conjugate(a_4[fIndex]))) + ((a_2[fIndex])*(TComplex::Conjugate(a_3[fIndex])));
+    Oz[fIndex] = 2 * (tempOz.Im());   
+    
+    
+  }
+  
+  
+  // Fill prior histograms
+  for (int i = 0; i < fNSamples; ++i){
+    priorB->Fill(B[i]);
+    priorR->Fill(R[i]);
+    priorT->Fill(T[i]);
+    priorOx->Fill(Ox[i]);
+    priorOz->Fill(Oz[i]);
+  }
+  
+  TCanvas *Bplot = new TCanvas("Bplot","Bplot",1200,900);
+  Bplot->SetFillStyle(0);
+  Bplot->SetFillColor(0);
+  Bplot->SetFrameFillStyle(0);
+  Bplot->cd(1);
+  priorB->GetXaxis()->SetTitle("B");
+  priorB->SetFillColor(kGreen);
+  priorB->Draw("");
+  
+  
+  Bplot->SaveAs("prior_post_B.png");
+  
+  TCanvas *Rplot = new TCanvas("Rplot","Rplot",1200,900);
+  Rplot->SetFillStyle(0);
+  Rplot->SetFillColor(0);
+  Rplot->SetFrameFillStyle(0);
+  Rplot->cd(1);
+  priorR->GetXaxis()->SetTitle("R");
+  priorR->SetFillColor(kGreen);
+  priorR->Draw("");
+  
+  
+  Rplot->SaveAs("prior_post_R.png");
+  
+  TCanvas *Tplot = new TCanvas("Tplot","Tplot",1200,900);
+  Tplot->SetFillStyle(0);
+  Tplot->SetFillColor(0);
+  Tplot->SetFrameFillStyle(0);
+  Tplot->cd(1);
+  priorT->GetXaxis()->SetTitle("T");
+  priorT->SetFillColor(kGreen);
+  priorT->Draw("");
+  
+  
+  Tplot->SaveAs("prior_post_T.png");
+  
+  TCanvas *Oxplot = new TCanvas("Oxplot","Oxplot",1200,900);
+  Oxplot->SetFillStyle(0);
+  Oxplot->SetFillColor(0);
+  Oxplot->SetFrameFillStyle(0);
+  Oxplot->cd(1);
+  priorOx->GetXaxis()->SetTitle("Ox");
+  priorOx->SetFillColor(kGreen);
+  priorOx->Draw("");
+  
+  
+  Oxplot->SaveAs("prior_post_Ox.png");
+  
+
+  TCanvas *Ozplot = new TCanvas("Ozplot","Ozplot",1200,900);
+  Ozplot->SetFillStyle(0);
+  Ozplot->SetFillColor(0);
+  Ozplot->SetFrameFillStyle(0);
+  Ozplot->cd(1);
+  priorOz->GetXaxis()->SetTitle("Oz");
+  priorOz->SetFillColor(kGreen);
+  priorOz->Draw("");
+  
+  
+  Ozplot->SaveAs("prior_post_Oz.png");
+  
+ 
+  
+  
+}
