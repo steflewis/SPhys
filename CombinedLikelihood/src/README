@@ -1,0 +1,1 @@
+This directory contains a variation on the new likelihood function code where the recoil asymmetry, R, is given a separate likelihood function in the same class and the likelihood functions are combined through multiplication.
