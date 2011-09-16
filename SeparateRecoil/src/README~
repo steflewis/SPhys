@@ -1,0 +1,5 @@
+This directory contains CPU and GPU daughter classes that inherit from TSimplePhysics directly and TNestedSample indirectly.
+
+It is designed to test the new, more detailed likelihood function.
+
+The TSimplePhysics constructor has been tidied and now uses several private functions.

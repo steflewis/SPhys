@@ -1,0 +1,2 @@
+This directory contains a variation on the new likelihood function code where the recoil asymmetry, R, is given a separate likelihood function in a separate TNestedSample daughter class, TRecoil, whose posterior is then used to provide a narrow prior in the main function.  
+It is expected to be slow as the program must only 'accept' a point if the value of R calculated from the complex amplitudes is within one standard deviation of this R posterior (from the TRecoil class).
