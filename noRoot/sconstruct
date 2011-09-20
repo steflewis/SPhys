@@ -1,0 +1,12 @@
+# Initialise the environment
+env = Environment()
+
+# Include Path
+incpath = ['.','/home/Stefanie/NestedSampling/CPU_GPU/noRoot/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
+env.Append(CPPPATH = incpath)
+ocl_libpath='/home/Stefanie/NestedSampling/CPU_GPU/noRoot/OpenCLIntegration'
+env.Append(LIBPATH=[ocl_libpath])
+env.Append(LIBS=['OpenCL','OclWrapper'])
+env.Append(CXXFLAGS = '-g3')
+
+env.Program('dummy', ['TSimplePhysics_GPU.cc','test.cc']) #,'src/TPlotter.cc'])  
