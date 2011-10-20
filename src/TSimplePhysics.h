@@ -90,18 +90,18 @@ public:
   TComplex *a_3;  // method.  I.e. can alter the complex amplitudes to determine
   TComplex *a_4;  // new (slightly changed) value of B.
   
-  double   *B;          // array[nSamples] holding prior values of B
+  float   *B;          // array[nSamples] holding prior values of B
 
 //  const double    Log2e = log2(TMath::E());
 
   // LogLhood() Variables:
   ifstream  eventgen;   // File containing azimuthal angles for each event
   ifstream  newprior;   // File to read in new prior information.
-  double   *angles;     // Extracted angles from file, will be array[nEvents]
-  double   *pol;        // Array of polarisation states (-1 or 1) also extracted
-  double   *P_gamma;    // Beam polarisation
+  float   *angles;     // Extracted angles from file, will be array[nEvents]
+  float   *pol;        // Array of polarisation states (-1 or 1) also extracted
+  float   *P_gamma;    // Beam polarisation
 
-  double    delta_L;    // Luminosity asymmetry (essentially). Initially will be 
+  float    delta_L;    // Luminosity asymmetry (essentially). Initially will be 
                         // kept as 0 but will eventually be an array?
                         
   // These attributes are used when extending the LogLhood method to 

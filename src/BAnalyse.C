@@ -35,7 +35,7 @@
   gStyle->SetFrameFillStyle(0);
   gStyle->SetFillStyle(0);
 
-  const char* filename = "/home/stefl/SPhys2/doubles_posterior_test.root";
+  const char* filename = "/home/Stefanie/Dropbox/NestedSampling/CPU_GPU/SPhys_vCPU_test1.root";
 
   // change filename in lines below
    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(filename);

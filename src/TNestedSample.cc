@@ -126,7 +126,7 @@ void TNestedSample::Iterate()
   }
   testfile.close();
   
-
+ // printf("test file closed \n"); //Testing - JM
   //TERMINATION CONDITION
   //for(fNest = 0; fNest <= 2*fNSamples*fH; fNest++)
 
@@ -152,6 +152,7 @@ void TNestedSample::Iterate()
 
 
       //Call Eval function
+//      printf("Calling Eval %d\n",fNest);  //Testing - JM
       Eval(fNest, fWorst); 
 
       fNoIterates++;

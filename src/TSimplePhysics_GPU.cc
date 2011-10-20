@@ -36,62 +36,69 @@ TSimplePhysics_GPU::TSimplePhysics_GPU()
 
 }
 //_____________________________________________________________________
-TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename) : TSimplePhysics(numberOfObjects, logWidth, filename)
+TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename) : TSimplePhysics(numberOfObjects, logWidth, filename)  
 {
 
   InitOpenCL();
-  
+
 }
 //____________________________________________________________________
 float
-TSimplePhysics_GPU::LogLhood (float B, float Pg)
+TSimplePhysics_GPU::LogLhood (float B_obs, float Pg_obs)
 {
   
-  float LogL[1];
-  
+  // Determine number of cores present on machine
+  // Can use any number, but no advantage when nunits is set > number of cores.
+  float tmpLogL[nunits];
   // Push CPU arrays to GPU
-  float B_array[1];
-  B_array[0]=B;
-  
-  float Pg_array[1];
-  Pg_array[0]=Pg;
-  
-  wrapper->doNothing(); //debugging  
-  wrapper->writeBuffer(cl_B,sizeof(float),B_array);
-  wrapper->writeBuffer(cl_Pg,sizeof(float),Pg_array);
-//  wrapper->writeBuffer(cl_angles,array_size,angles);
-//  wrapper->writeBuffer(cl_pols,array_size,pols);
-  
+  B_Pg_array[0]=B_obs;
+  B_Pg_array[1]=Pg_obs;
+  int flt_sz=(int)sizeof(float);
+  // Enqueue write buffer
+  wrapper->writeBuffer(cl_B_Pg,2*flt_sz,B_Pg_array);
+  // The arguments to the enqueueNDRange function essentially determine grid over which the data is divided into sections
+  int ncalls = wrapper->enqueueNDRange(cl::NDRange(nunits*NTH), cl::NDRange(NTH));
   // Execute kernel
+  wrapper->kernel_functor(cl_B_Pg, cl_angles, cl_pols, cl_LogL, Log2e, nEvents,nunits).wait();
+  //std::cout << ncalls <<"\n";
+  // Enqueue read buffer
+  wrapper->readBuffer(cl_LogL,flt_sz*nunits,tmpLogL);
+
+  float sumLog = 0;
+  for (int i = 0; i < nunits; i++){
+   sumLog += tmpLogL[i];    
+  }
   
-  wrapper->enqueueNDRange(cl::NDRange(nEvents), cl::NullRange);
-  wrapper->kernel_functor(cl_B, cl_Pg, cl_angles, cl_pols, cl_LogL, Log2e, nEvents).wait();
-   
-  // Enqueue read buffers
-  wrapper->readBuffer(cl_LogL,sizeof(float),LogL);
-  return LogL[0]; 
+  return sumLog; 
 
 }
 
 //____________________________________________________________________
 void TSimplePhysics_GPU::InitOpenCL()
 {
+  array_size = sizeof(float)*nEvents;
+  wrapper = new OclWrapper(true,"Likelihood2.cl","Likelihood2");
+  nunits=wrapper->getMaxComputeUnits();
+/*
   wrapper = new OclWrapper(true);
-  
+  nunits = wrapper->deviceInfo.max_compute_units(wrapper->devices[wrapper->deviceIdx]);
+
   wrapper->loadKernel("Likelihood2.cl","Likelihood2");
-    // Create OpenCL Arrays
-
-  size_t array_size = sizeof(float)*nEvents;
-
-  cl_B = wrapper->makeReadBuffer((int)sizeof(float));//,NULL, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR);
-  cl_Pg = wrapper->makeReadBuffer((int)sizeof(float));
-  cl_angles = wrapper->makeReadBuffer(array_size);
-  cl_pols = wrapper->makeReadBuffer(array_size);
-  cl_LogL = wrapper->makeWriteBuffer(sizeof(float));
-
-  wrapper->writeBuffer(cl_angles,array_size,angles);
-  wrapper->writeBuffer(cl_pols,array_size,pol);
- 
- 
+*/
+	
+  printf("angle test: %lf\n",angles[7]);
+  printf("thread test: %d\n",NTH);
+//  B_Pg_array = new float[2];
+  // Create the Command Queue
+//  wrapper->createQueue();
+  // Create OpenCL Arrays
+  int flt_size=(int)sizeof(float);
+  cl_B_Pg = wrapper->makeReadBuffer(2*flt_size);
+  cl_angles = wrapper->makeReadBuffer(array_size,angles);
+  cl_pols = wrapper->makeReadBuffer(array_size,pol);
+  cl_LogL = wrapper->makeWriteBuffer(nunits*flt_size);
+// printf("nunits test: %d\n",wrapper->deviceInfo.max_compute_units(wrapper->devices[wrapper->deviceIdx]));
+  printf("nEvents test: %d\n",nEvents);
+  
 }
 //____________________________________________________________________

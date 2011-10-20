@@ -3,7 +3,6 @@
  *
  * */
 
-
 #ifndef __OCLWRAPPER_H__
 #define __OCLWRAPPER_H__
 
@@ -27,7 +26,7 @@
 //#include <Timing.h>
 #include <DeviceInfo.h>
 #include <PlatformInfo.h>
-
+#define NBUFS 16
 void checkErr(cl_int err, const char * name);
 
 typedef unsigned int uint;
@@ -48,30 +47,38 @@ class OclWrapper {
 		std::string kernelsource;
 		cl::vector<cl::Platform> platformList;
 		// This assumes a single context, a single device, a single program and a single kernel
-		cl::vector<cl::Device> devices;
+// 		cl::vector<cl::Device> devices;
 		cl::Program* program_p;
 
-		int platformIdx, deviceIdx;
+// 		int platformIdx, deviceIdx;
 		bool useGPU;
 		cl_int err;                            // error code returned from API calls
 
 		void getContextAndDevices();
 		void getDevices();
+		
 
 	public:
+		cl::vector<cl::Device> devices;
 		cl::Context* context_p;
 		cl::Kernel* kernel_p;
+		//cl::Kernel kernel;
 		cl::KernelFunctor kernel_functor;
 		cl::CommandQueue* queue_p;
+		cl::CommandQueue queue;
+		cl::Buffer buf[NBUFS];
+		cl::Buffer* buf_p;
 		int nPlatforms;
 		DeviceInfo deviceInfo;
+		int platformIdx, deviceIdx;
 #ifdef PLATINFO
 		PlatformInfo platformInfo;
 #endif
-
+		int ncalls;
 		OclWrapper (bool use_gpu);
 		OclWrapper (bool use_gpu, int deviceIdx);
 		OclWrapper ();
+		OclWrapper (bool use_gpu,const char* ksource, const char* kname);
 
 		bool hasGPU(int pIdx);
 		bool hasCPU(int pIdx);
@@ -83,18 +90,26 @@ class OclWrapper {
 		void selectCPU();
 
 		void buildProgram(const char* ksource,const char* opts);
+		void reloadKernel(const char* kname);
 		void loadKernel(const char* kname);
 		void loadKernel(const char* ksource, const char* kname);
 		void loadKernel(const char* ksource, const char* kname, const char* opts);
 		void loadBinary(const char* ksource);
 		void storeBinary(const char* ksource);
-		cl::Buffer& makeWriteBuffer( int bufSize );
-		cl::Buffer& makeReadBuffer(int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR);
+
+		int getMaxComputeUnits();
+		cl::Buffer* makeWriteBuffer( int bufSize );
+		cl::Buffer* makeStaticWriteBuffer( int idx,int bufSize );
+		cl::Buffer* makeReadBuffer(int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY );
+		cl::Buffer* makeStaticReadBuffer(int idx,int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY );
 		void createQueue();
-		void enqueueNDRange(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
-		void readBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
+		void setArg(unsigned int idx, cl::Buffer* buf);
+		int enqueueNDRange(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
+		int enqueueNDRangeRun(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
+		void readStaticBuffer(int idx, int bufSize, void* hostBuf);
+		void readBuffer(cl::Buffer* deviceBuf, int bufSize, void* hostBuf);
 		void readBuffer(
-				const cl::Buffer& buffer,
+				cl::Buffer* buffer,
 				bool blocking_read,
 				::size_t offset,
 				::size_t size,
@@ -102,9 +117,10 @@ class OclWrapper {
 				const VECTOR_CLASS<cl::Event> * events = NULL,
 				cl::Event * event = NULL);
 
-		void writeBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
+		void writeBuffer1(int bufSize, void* hostBuf);
+		void writeBuffer(cl::Buffer* deviceBuf, int bufSize, void* hostBuf);
 		void writeBuffer(
-				const cl::Buffer& deviceBuf,
+				cl::Buffer* deviceBuf,
 				bool blocking_write,
 				::size_t offset,
 				::size_t size,

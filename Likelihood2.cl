@@ -23,37 +23,32 @@ Log2e: natural log constant
 
 */
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-#define NTH 32
-__kernel void Likelihood2(__global float* B, __global float* Pg, __global float* angles, __global float* pols, __global float* LogL, const float Log2e, const int Asize) {
+#define NTH 16
 
+__kernel void Likelihood2(__global float* B_Pg, __global float* angles, __global float* pols, __global float* LogL, const float Log2e, const int Asize, const int nunits) {
 	int g_id=get_group_id(0);
-	/* double B=Bs[gid]; */
-	/*double Pg=Pgs[gid];*/
-	
-	 /*double angle        = get_global_id(0);*/
-	 /*double polarisation = get_global_id(1);*/
+	float B=B_Pg[0];
+	float Pg=B_Pg[1];
+
+	int numgrps = get_num_groups(0);
+	 int gl_id = get_global_id(0);
 	 int l_id = get_local_id(0);
-	 /*float  angle        = angles[l_id];*/
-	 /*float  pol          = pols[l_id];*/
 	 float  delta_L      = 0.0;
-	 //LogL[0]                = 0.0;
 	 float  costerm      = 0.0;
 	 
 	 float  A_tilde;
 	 float  LogL_2       = 0.0;
-	 /*int    Asize        = 10075;  //Size of event arrays (angles and pols) */
-	 int    M            = Asize / NTH; /* FIXME: deal with remainder! */
-	 int    remainder    = Asize - (M*NTH); 
 	 float  probsum      = 0.0;
 	 local  float chunkSums[NTH];
-	 float  Total        = 0.0;
-	int start = l_id*M;
-	int stop = (idx != NTH-1) ?  (l_id+1)*M  : Asize  ;
+
+	 int mSize = Asize/(nunits*NTH);
+	 int start = gl_id*mSize;
+	 int stop = (gl_id==(nunits*NTH-1))?Asize:(gl_id+1)*mSize;
 	 for (int idx = start; idx<stop; idx++) {
 	    float angle = angles[idx];
 	    float pol   = pols[idx];
 	    float  prob         = 0.0;
-	    costerm = Pg * B * cos(2*angle);
+	    costerm = Pg*B*cos(2*angle);
 	 
 	    A_tilde = (costerm + delta_L) / (1 + (costerm*delta_L));
 
@@ -65,27 +60,20 @@ __kernel void Likelihood2(__global float* B, __global float* Pg, __global float*
 	      prob = 0.5*(1 - A_tilde);
 	    }
 
-	    probsum += prob;
+	    probsum += log2(prob);
 
 	 }
 	 chunkSums[l_id] = probsum;
-/* How do these terms get added up? */
-	  /* Barrier function goes here. */
+
+	  // Barrier function goes here. 
 	  barrier(CLK_LOCAL_MEM_FENCE);
 
 
-	  /* Deal with remainder here? */
-	  /* Not really sure what to do with it... Another for loop ranging from the last 'chunk'?  */
-	  /* Does the array have to have size (NTH+1) to allow for this, or does it get tacked on to the last one? */
-
 	  for (int i = 0; i < NTH; i++){
-	      Total += chunkSums[i];
+	      LogL_2 += chunkSums[i];
 	  }
-
 	 
+	 LogL[g_id] = LogL_2 / Log2e;
 
-/* Should I convert back to natural Log here? */
-
-	 LogL[0] = log2(Total) / Log2e;
-
+//	 LogL[g_id] = B+Pg;
 }

@@ -32,7 +32,12 @@
 // #include "TRandom.h"
 // #include "TMath.h"
 // #include <TFile.h>
+
+#define GPU
+
+#include "OclWrapper.h"
 #include "TSimplePhysics_GPU.h"
+#include "TSimplePhysics_CPU.h"
 #ifdef PLOT
 #include "TPlotter.h"
 #endif
@@ -59,7 +64,8 @@ char posterior[] = "SPhys_vCPU_test1.root";
 
 double logWidth = log(1.0 - exp(-1.0 / noSamples));
 
-char datafile[] = "/home/stefl/NestedSampling/CPU_GPU/text_files/datatest.txt";
+//char datafile[] = "/home/Stefanie/Dropbox/NestedSampling/EventGen/datasets/1000/data_set1.txt";//"/home/Stefanie/Dropbox/NestedSampling/CPU_GPU/text_files/datatest.txt";
+char datafile[] = DATAPATH ;
 
 int testing = 0;   //Change to 1 when testing.
 int verbose = 1;
@@ -80,12 +86,19 @@ char prior_file[] = "oldprior.txt";
 int main(void)
 {
 
-
+#ifdef GPU
   TSimplePhysics_GPU *LH = new TSimplePhysics_GPU(noSamples,logWidth, datafile);
 #ifdef PLOT
   TPlotter *plot = new TPlotter(prior_file,posterior,noSamples);
 #endif
-
+#endif
+  
+#ifndef GPU
+   TSimplePhysics_CPU *LH = new TSimplePhysics_CPU(noSamples,logWidth, datafile);
+#ifdef PLOT
+  TPlotter *plot = new TPlotter(prior_file,posterior,noSamples);
+#endif
+#endif
 
   if (verbose == 1)
     printf("Start of main function.  logWidth is %g\n",logWidth);
@@ -110,6 +123,7 @@ int main(void)
 
   if (Updated == false){
     for (int i = 0; i < noSamples; i++){
+//WV cout << i<< endl; 
       LH->Prior(i);
     }
 
@@ -117,13 +131,13 @@ int main(void)
   else if (Updated == true){
     LH->UpdatedPrior();
   }
-
-  // printf("About to run Iterate\n");
+printf("Finished Prior\n");
+   printf("About to run Iterate\n");
   LH->Iterate();                  //Run
-  // printf("Finished running Iterate\n");
+   printf("Finished running Iterate\n");
 
   LH->FinalCorrection();          //Optional final correction
-  printf("Final Correction complete\n");
+  //printf("Final Correction complete\n");
 
   LH->PrintSummary(posterior);
   printf("Print Summary complete\n"); 

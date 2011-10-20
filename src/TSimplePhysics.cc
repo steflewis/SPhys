@@ -114,10 +114,10 @@ TSimplePhysics::Prior(int fIndex)
   // P_gamma set-up
   TRandom *pol_gen = new TRandom();
 
-  for(int i = 0; i < fNSamples; i++){
-    P_gamma[i] = pol_gen->Gaus(0.8, 0.01);
+  //for(int i = 0; i < fNSamples; i++){
+    P_gamma[fIndex] = pol_gen->Gaus(0.7, 0.01);
     //P_gamma[i] = pol_gen->Uniform(0.0, 1.0);
-  }
+  //}
 
   //========================================================================//
 
@@ -357,10 +357,10 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
   int      accept         = 0;
   int      reject         = 0;
   
-  double   trialB;  
-  double   trialLogL;
-  double   trialx[8];
-  double   trial_rSquared = 0;
+  float   trialB;  
+  float   trialLogL;
+  float   trialx[8];
+  float   trial_rSquared = 0;
 
   TComplex trial_a1;
   TComplex trial_a2;
@@ -369,19 +369,18 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
 
   int      m              = 20;
 
-
+//printf("Entered explore function, iterate: %d\n",fNest);
   // Everything to do with the new P_gamma array:
-  //double   PB;
-  //double   trial_PB;
-  double   trial_Pgam;
-  double   step_gamma;
-  double   sig_gamma      = 0.05;
-  double   fwhm_gamma     = 2*(TMath::Sqrt( 2*log(2)))*sig_gamma;
+  float   PB;
+  float   trial_PB;
+  float   trial_Pgam;
+  float   step_gamma;
+  float   sig_gamma      = 0.05;
+  float   fwhm_gamma     = 2*(TMath::Sqrt( 2*log(2)))*sig_gamma;
   bool     flag           = true;
 
   for( ; m > 0; m--)
     {
-
       sig       = fwhm / ( 2*( TMath::Sqrt( 2*log(2) ) ) );
       flag = true;
 
@@ -396,24 +395,30 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
 	trialx[i] /= TMath::Sqrt(trial_rSquared);
       }
 
-      trial_a1   = TComplex(trialx[0],trialx[1]);
-      trial_a2   = TComplex(trialx[2],trialx[3]);
-      trial_a3   = TComplex(trialx[4],trialx[5]);
-      trial_a4   = TComplex(trialx[6],trialx[7]);
+      trial_a1   = TComplex((double)trialx[0],(double)trialx[1]);
+      trial_a2   = TComplex((double)trialx[2],(double)trialx[3]);
+      trial_a3   = TComplex((double)trialx[4],(double)trialx[5]);
+      trial_a4   = TComplex((double)trialx[6],(double)trialx[7]);
     
       trialB     = trial_a1.Rho2() + trial_a2.Rho2() - trial_a3.Rho2() - trial_a4.Rho2();
       
       // P_gamma piece
-      //PB         = trialB * P_gamma[sampleIndex];
+      PB         = trialB * P_gamma[sampleIndex];
       sig_gamma  = fwhm_gamma / ( 2*( TMath::Sqrt( 2*log(2) ) ) );
       // step_gamma = gRandom->Gaus(0,sig_gamma);
       //while(flag == true){
       //step_gamma = gRandom->Gaus(0,sig_gamma);
-      if(sig_gamma > 1)
+/*      if(sig_gamma > 1)
 	sig_gamma = 1/sig_gamma;
-      step_gamma = gRandom->Uniform(0.0,sig_gamma);
-      trial_Pgam = P_gamma[sampleIndex] + step_gamma;
-      
+      step_gamma = gRandom->Uniform(0.0,sig_gamma);*/
+
+while(flag == true){
+ step_gamma = gRandom->Gaus(0,sig_gamma);
+ trial_PB = PB + step_gamma;
+ trial_Pgam = trial_PB/trialB;
+       if((trial_Pgam > 0.65) && (trial_Pgam < 0.75))
+	 flag = false;
+}     
       //trial_PB = PB + step_gamma;
 
       //trial_Pgam = trial_PB / trialB;
@@ -422,9 +427,10 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
 	//  flag = false;
 	//}
 	//}
-
+//printf("Explore function, about to call likelihood. fNest: %d, m: %d\n",fNest,m);
+	//cout <<sampleIndex<<','<< m <<endl;
       trialLogL  = LogLhood(trialB,trial_Pgam);
- 
+ //printf("Explore function, finished calling likelihood. fNest: %d, m: %d\n",fNest,m);
       if(trialLogL > fLogLstar)
       	{
 
@@ -461,7 +467,7 @@ TSimplePhysics::Explore (double fLogLstar, int sampleIndex)
       //  	printf("Sample index: %d\t Pgamma: %lf\t Sigma: %lf\t FWHM: %lf\n",sampleIndex,trial_Pgam,sig_gamma,fwhm_gamma);
       // }
     }
-
+//printf("Leaving explore, fNest: %d\n",fNest);
 }
 
 //________________________________________________________________________
@@ -636,10 +642,10 @@ int TSimplePhysics::GetEvents(const char* name){
 //____________________________________________________________________
 void TSimplePhysics::CreateArrays(){
   
-  angles  = new double[nEvents];
-  pol     = new double[nEvents];
-  B       = new double[fNSamples];
-  P_gamma = new double[fNSamples];
+  angles  = new float[nEvents];
+  pol     = new float[nEvents];
+  B       = new float[fNSamples];
+  P_gamma = new float[fNSamples];
   // Declare 2D arrays for x values.  
   // Essentially will be x[8][fNSamples].
 
@@ -701,7 +707,7 @@ void TSimplePhysics::ReadData(const char* name){
  
   eventgen.close();
   eventgen.clear();
- 
+ printf("Data file test!  angles[7] = %lf\n",angles[7]);
   
 }
 
