@@ -68,7 +68,7 @@ TSimplePhysics_GPU::LogLhood (float B_obs, float Pg_obs)
   for (int i = 0; i < nunits; i++){
    sumLog += tmpLogL[i];    
   }
-  
+//printf("LogL: %lf\n",sumLog);  
   return sumLog; 
 
 }
