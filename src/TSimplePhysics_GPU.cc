@@ -53,6 +53,7 @@ TSimplePhysics_GPU::LogLhood (float B_obs, float Pg_obs)
   // Push CPU arrays to GPU
   B_Pg_array[0]=B_obs;
   B_Pg_array[1]=Pg_obs;
+cout << "B: "<<B_Pg_array[0]<< "Pg: "<< B_Pg_array[1]<<endl;
   int flt_sz=(int)sizeof(float);
   // Enqueue write buffer
   wrapper->writeBuffer(cl_B_Pg,2*flt_sz,B_Pg_array);
@@ -68,7 +69,7 @@ TSimplePhysics_GPU::LogLhood (float B_obs, float Pg_obs)
   for (int i = 0; i < nunits; i++){
    sumLog += tmpLogL[i];    
   }
-//printf("LogL: %lf\n",sumLog);  
+printf("LogL: %lf\n",sumLog);  
   return sumLog; 
 
 }

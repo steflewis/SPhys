@@ -13,11 +13,23 @@
 //      Uses GPU programming (OpenCL).
 //
 // ==================================================================== 
-#ifndef TSIMPLEPHYSICS_GPU_NOROOT_H
-#define TSIMPLEPHYSICS_GPU_NOROOT_H
+#ifndef TSIMPLEPHYSICS_GPU_H
+#define TSIMPLEPHYSICS_GPU_H
 
 #include "OclWrapper.h"
 
+// #include "TROOT.h"
+// #include "TTree.h"
+// #include "TMinuit.h"
+// #include "TMath.h"
+// #include "TRandom.h"
+// #include "TComplex.h"
+// #include "TFile.h"
+// #include "Riostream.h"
+// #include "Rtypes.h"
+
+// #include "TNestedSample.h"
+// #include "TSimplePhysics.h"
 
 #include <math.h>
 #include <iostream>
@@ -27,34 +39,37 @@
 
 
 //Variable for value of pi:
-const float Log2e = M_LOG2E;
+const float    Log2e = M_LOG2E;
+const unsigned int NTH = 16;//16; // Number of threads. Make sure this is the same in the .cl file!
 class TSimplePhysics_GPU {
 
   
 public:
   // Attributes:
   OclWrapper *wrapper;
-  cl::Buffer cl_B, 
-  cl_Pg, 
-  cl_angles, 
-  cl_pols,
-  cl_LogL; 
-  
+  cl::Buffer* cl_B_Pg; 
+  cl::Buffer*  cl_angles; 
+  cl::Buffer*  cl_pols; 
+  cl::Buffer*  cl_LogL; 
+  float B_Pg_array[2];
   size_t array_size;
+  int nunits;
+
+  float* angles;
+  float* pol;
+  int flt_size;
+  int nEvents;
+//  int fNSamples;
   // Methods:
   
   TSimplePhysics_GPU();
   ~TSimplePhysics_GPU() {};
   
-  TSimplePhysics_GPU(int numberOfObjects);
+  //TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename);
   
   float LogLhood(float B, float Pg);
   float CPU_LogLhood(float B, float Pg);
   
-  float *angles;
-  float *pol;
-  
-  int nEvents;
   
 private:
   

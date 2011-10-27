@@ -26,9 +26,9 @@ env = init_environment("root")
 
 #Include Path
 cwd=os.environ['PWD']
-incpath = ['.',cwd+'/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
+incpath = ['.',cwd+'/inc/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
 env.Append(CPPPATH = incpath)
-ocl_libpath=cwd+'/OpenCLIntegration'
+ocl_libpath=cwd+'/inc/OpenCLIntegration'
 env.Append(LIBPATH=['/opt/lib/root',ocl_libpath])
 env.Append(LIBS=['OpenCL','OclWrapper'])
 #env.Append(CXXFLAGS = '-g3')

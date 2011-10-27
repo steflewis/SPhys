@@ -1,3 +1,0 @@
-OclWrapper: and OpenCL wrapper class in C++
-OclBuilder.py: a SCons builder for OpenCL applications using OclWrapper
-ocl_env.sh: environment variables used by OclBuilder.py

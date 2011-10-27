@@ -3,9 +3,9 @@
 env = Environment()
 #env = init_environment("root")
 # Include Path
-incpath = ['.','/home/Stefanie/NestedSampling/CPU_GPU/noRoot/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
+incpath = ['.','/home/Stefanie/NestedSampling/CPU_GPU/inc/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
 env.Append(CPPPATH = incpath)
-ocl_libpath='/home/Stefanie/NestedSampling/CPU_GPU/noRoot/OpenCLIntegration'
+ocl_libpath='/home/Stefanie/NestedSampling/CPU_GPU/inc/OpenCLIntegration'
 env.Append(LIBPATH=[ocl_libpath])
 env.Append(LIBS=['OpenCL','OclWrapper'])
 env.Append(CXXFLAGS = '-g3')
