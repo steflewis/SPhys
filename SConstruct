@@ -30,14 +30,31 @@ incpath = ['.',cwd+'/OpenCLIntegration']
 env.Append(CPPPATH = incpath)
 ocl_libpath=cwd+'/OpenCLIntegration'
 env.Append(LIBPATH=['/opt/lib/root',ocl_libpath])
-env.Append(LIBS=['OpenCL','OclWrapper'])
+#env.Append(LIBS=['OpenCL','OclWrapper'])
+env.Append(LIBS=['OclWrapper'])
 #env.Append(CXXFLAGS = '-g3')
 datapath='DATAPATH="\\"'+cwd+'/text_files/datatest.txt\\""'
-env.Append(CXXFLAGS = ' -Wall -g -O0 -D'+datapath)
+env.Append(CXXFLAGS = ' -Wall -g -O0 -DOSX -D'+datapath)
 
 #AddOption('--GPU',)
 #Is it possible to add some sort of option to select CPU or GPU when compiling?
+OSX=1
+if OSX==1:
+    env['FRAMEWORKS'] = ['OpenCL']
+    env.Append(CPPPATH=['..'])
+else:
+    env['LIBS']=['OpenCL']
+    if plat=='AMD':
+        env['CPPPATH']=[OPENCL_DIR,AMD_SDK_PATH+'/include','/usr/include/CL']
+        env['LIBPATH']=[AMD_SDK_PATH+'/lib/x86_64']
+    elif plat=='Intel':
+        env['CPPPATH']=[OPENCL_DIR,INTEL_SDK_PATH+'/include/CL']
+        env['LIBPATH']=[INTEL_SDK_PATH+'/lib64']
+    else:
+        env['CPPPATH']=[OPENCL_DIR,OPENCL_DIR+'/CL',NVIDIA_SDK_PATH+'/OpenCL/common/inc']
 env.SConscript('OpenCLIntegration/SConstruct')
+
+
 if dev=='GPU':
   env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
