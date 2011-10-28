@@ -2,7 +2,7 @@
 
 
 void DeviceInfo::show(const cl::Device& device) {
-	cl_int err;
+	cl_int err=CL_SUCCESS;
     std::cout << "\nDevice Info:"<< std::endl;
 
     for (std::map<std::string,InfoTuple>::reverse_iterator iter_=infotbl.rbegin(); iter_!=infotbl.rend();iter_++) {

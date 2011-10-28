@@ -33,7 +33,7 @@
 // #include "TMath.h"
 // #include <TFile.h>
 
-#define GPU
+//#define GPU
 
 #include "OclWrapper.h"
 #include "TSimplePhysics_GPU.h"

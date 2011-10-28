@@ -78,7 +78,7 @@ class OclWrapper {
 		OclWrapper (bool use_gpu);
 		OclWrapper (bool use_gpu, int deviceIdx);
 		OclWrapper ();
-		OclWrapper (bool use_gpu,const char* ksource, const char* kname);
+		OclWrapper (bool use_gpu,const char* ksource, const char* kname, const char* kopts="");
 
 		bool hasGPU(int pIdx);
 		bool hasCPU(int pIdx);
@@ -98,18 +98,18 @@ class OclWrapper {
 		void storeBinary(const char* ksource);
 
 		int getMaxComputeUnits();
-		cl::Buffer* makeWriteBuffer( int bufSize );
+		cl::Buffer& makeWriteBuffer( int bufSize );
 		cl::Buffer* makeStaticWriteBuffer( int idx,int bufSize );
-		cl::Buffer* makeReadBuffer(int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY );
+		cl::Buffer& makeReadBuffer(int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY );
 		cl::Buffer* makeStaticReadBuffer(int idx,int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY );
 		void createQueue();
 		void setArg(unsigned int idx, cl::Buffer* buf);
 		int enqueueNDRange(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
 		int enqueueNDRangeRun(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
 		void readStaticBuffer(int idx, int bufSize, void* hostBuf);
-		void readBuffer(cl::Buffer* deviceBuf, int bufSize, void* hostBuf);
+		void readBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
 		void readBuffer(
-				cl::Buffer* buffer,
+				const cl::Buffer& buffer,
 				bool blocking_read,
 				::size_t offset,
 				::size_t size,
@@ -117,10 +117,10 @@ class OclWrapper {
 				const VECTOR_CLASS<cl::Event> * events = NULL,
 				cl::Event * event = NULL);
 
-		void writeBuffer1(int bufSize, void* hostBuf);
-		void writeBuffer(cl::Buffer* deviceBuf, int bufSize, void* hostBuf);
+//		void writeBuffer1(int bufSize, void* hostBuf);
+		void writeBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
 		void writeBuffer(
-				cl::Buffer* deviceBuf,
+				const cl::Buffer& deviceBuf,
 				bool blocking_write,
 				::size_t offset,
 				::size_t size,

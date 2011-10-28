@@ -1,4 +1,4 @@
-/* Kernel code for Nested Sampling Likelihood function */
+/*Kernel code for Nested Sampling Likelihood function */
 /*
 Inputs:
 // Sampled
@@ -23,10 +23,11 @@ Log2e: natural log constant
 
 */
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-#define NTH 16
+#define NTH 64
 
 __kernel void Likelihood2(__global float* B_Pg, __global float* angles, __global float* pols, __global float* LogL, const float Log2e, const int Asize, const int nunits) {
 	int g_id=get_group_id(0);
+
 	float B=B_Pg[0];
 	float Pg=B_Pg[1];
 
@@ -72,8 +73,8 @@ __kernel void Likelihood2(__global float* B_Pg, __global float* angles, __global
 	  for (int i = 0; i < NTH; i++){
 	      LogL_2 += chunkSums[i];
 	  }
-	 
+	
 	 LogL[g_id] = LogL_2 / Log2e;
 
-//	 LogL[g_id] = B+Pg;
+	 //LogL[g_id] = Log2e*(g_id==0)+Asize*(g_id==1)+nunits*(g_id==2)+(B+Pg)*(g_id==3);
 }

@@ -39,20 +39,22 @@
 
 
 //Variable for value of pi:
-const unsigned int NTH = 16;//16; // Number of threads. Make sure this is the same in the .cl file!
+const unsigned int NTH = 64; // Number of threads. Make sure this is the same in the .cl file!
 class TSimplePhysics_GPU : public TSimplePhysics {
 
   
 public:
   // Attributes:
-  OclWrapper *wrapper;
-  cl::Buffer* cl_B_Pg; 
-  cl::Buffer*  cl_angles; 
-  cl::Buffer*  cl_pols; 
-  cl::Buffer*  cl_LogL; 
+//  OclWrapper *wrapper;
+  OclWrapper ocl;
+  cl::Buffer cl_B_Pg; 
+  cl::Buffer  cl_angles; 
+  cl::Buffer  cl_pols; 
+  cl::Buffer  cl_LogL; 
   float B_Pg_array[2];
   size_t array_size;
   int nunits;
+//  float* test_angles;
 
   // Methods:
   

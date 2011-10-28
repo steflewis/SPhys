@@ -7,7 +7,7 @@
 // ----------------------------------------------------------------------------------------
 // Constructors
 // ----------------------------------------------------------------------------------------
-OclWrapper::OclWrapper (bool use_gpu,const char* ksource, const char* kname) : useGPU(use_gpu), nPlatforms(0), ncalls(0) {
+OclWrapper::OclWrapper (bool use_gpu,const char* ksource, const char* kname, const char* kopts) : useGPU(use_gpu), nPlatforms(0), ncalls(0) {
 
 	    // First check the Platform
 		cl::Platform::get(&platformList);
@@ -23,9 +23,10 @@ OclWrapper::OclWrapper (bool use_gpu,const char* ksource, const char* kname) : u
 #endif
 
 		selectDevice();
-		loadKernel( ksource,  kname);
+		loadKernel( ksource,  kname, kopts);
 		createQueue();
     }
+
 OclWrapper::OclWrapper (bool use_gpu) : useGPU(use_gpu), nPlatforms(0), ncalls(0) {
 
 	    // First check the Platform
@@ -42,6 +43,8 @@ OclWrapper::OclWrapper (bool use_gpu) : useGPU(use_gpu), nPlatforms(0), ncalls(0
 #endif
 
 		selectDevice();
+		createQueue();
+        
     }
 
 OclWrapper::OclWrapper (bool use_gpu, int devIdx) : useGPU(use_gpu), nPlatforms(0) {
@@ -362,22 +365,27 @@ cl::Buffer* OclWrapper::makeStaticWriteBuffer(int idx,int bufSize) {
 	return buf;
 }
 
-cl::Buffer* OclWrapper::makeWriteBuffer(int bufSize) {
+cl::Buffer& OclWrapper::makeWriteBuffer(int bufSize) {
 	 cl::Buffer* buf_p= new cl::Buffer(
 	            *context_p,
 	            CL_MEM_WRITE_ONLY,
 	            bufSize,NULL,&err);
 	 checkErr(err, "Buffer::Buffer()");
-	return buf_p;
+	cl::Buffer& buf_r = *buf_p;
+	return buf_r;
 }
 
-cl::Buffer* OclWrapper::makeReadBuffer(int bufSize,void* hostBuf, cl_mem_flags flags) {
+cl::Buffer& OclWrapper::makeReadBuffer(int bufSize,void* hostBuf, cl_mem_flags flags) {
+    if (hostBuf!=NULL && flags==CL_MEM_READ_ONLY) {
+     flags=CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR;
+    }
 	 cl::Buffer* buf_p= new cl::Buffer(
 	            *context_p,
 	            flags,
 	            bufSize,hostBuf,&err);
-	 checkErr(err, "Buffer::Buffer()");
-	return buf_p;
+	 checkErr(err, "makeReadBuffer()");
+     cl::Buffer& buf_r=*buf_p;
+	return buf_r;
 }
 cl::Buffer* OclWrapper::makeStaticReadBuffer(int idx,int bufSize,void* hostBuf, cl_mem_flags flags) {
 	 //cl::Buffer* buf_p= new cl::Buffer(
@@ -402,10 +410,10 @@ void OclWrapper::readStaticBuffer(int idx, int bufSize, void* hostBuf) {
 
 }
 
-void OclWrapper::readBuffer(cl::Buffer* deviceBuf, int bufSize, void* hostBuf) {
+void OclWrapper::readBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf) {
 
 	err = queue_p->enqueueReadBuffer(
-	            *deviceBuf,
+	            deviceBuf,
 	            CL_TRUE,
 	            0,
 	            bufSize,
@@ -414,12 +422,12 @@ void OclWrapper::readBuffer(cl::Buffer* deviceBuf, int bufSize, void* hostBuf) {
 
 }
 
-void OclWrapper::readBuffer(cl::Buffer* deviceBuf, bool blocking_read,
+void OclWrapper::readBuffer(const cl::Buffer& deviceBuf, bool blocking_read,
 		::size_t offset, ::size_t bufSize, void * hostBuf,
 		const VECTOR_CLASS<cl::Event> * events,
 		cl::Event * event) {
 	err = queue_p->enqueueReadBuffer(
-			*deviceBuf,
+			deviceBuf,
 			blocking_read,
 			offset,
 			bufSize,
@@ -430,7 +438,7 @@ void OclWrapper::readBuffer(cl::Buffer* deviceBuf, bool blocking_read,
 	checkErr(err, "CommandQueue::enqueueReadBuffer()");
 
 }
-
+/*
 void OclWrapper::writeBuffer1( int bufSize, void* hostBuf) {
 
 	err = queue_p->enqueueWriteBuffer(
@@ -442,10 +450,11 @@ void OclWrapper::writeBuffer1( int bufSize, void* hostBuf) {
 	checkErr(err, "CommandQueue::enqueueWriteBuffer()");
 
 }
-void OclWrapper::writeBuffer(cl::Buffer* deviceBuf, int bufSize, void* hostBuf) {
+*/
+void OclWrapper::writeBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf) {
 
 	err = queue_p->enqueueWriteBuffer(
-	            *deviceBuf,
+	            deviceBuf,
 	            CL_TRUE,
 	            0,
 	            bufSize,
@@ -454,12 +463,12 @@ void OclWrapper::writeBuffer(cl::Buffer* deviceBuf, int bufSize, void* hostBuf) 
 
 }
 
-void OclWrapper::writeBuffer(cl::Buffer* deviceBuf, bool blocking_write,
+void OclWrapper::writeBuffer(const cl::Buffer& deviceBuf, bool blocking_write,
 		::size_t offset, ::size_t bufSize, void * hostBuf,
 		const VECTOR_CLASS<cl::Event> * events,
 		cl::Event * event) {
 	err = queue_p->enqueueWriteBuffer(
-			*deviceBuf,
+			deviceBuf,
 			blocking_write,
 			offset,
 			bufSize,
