@@ -39,7 +39,7 @@ def loadroot(env) :
 	# no GQt in Windows
 	if env['PLATFORM'] == 'posix':
 #		rootlibs += ['-lGQt']
-#		env.Append(LIBPATH = [ROOTSYS + '/lib/root'])
+		env.Append(LIBPATH = [ROOTSYS + '/lib/root'])
 		env.Append(LIBPATH = [ROOTSYS + '/lib'])
 	if env['PLATFORM'] == 'darwin':
 #		rootlibs += ['-lGQt']

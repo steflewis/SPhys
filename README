@@ -1,0 +1,7 @@
+A Nested Sampling Markov Chain Monte Carlo (MCMC) with the likelihood computation implemented in OpenCL.
+The OpenCLIntegration directory contains an OpenCL wrapper class and a SCons build library to simplify
+integration. 
+To build this code you need the build tool SCons (www.scons.org/)
+
+
+

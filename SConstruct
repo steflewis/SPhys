@@ -1,44 +1,31 @@
 #verbose: scons SHOWBUILD=1 
 from init_env import init_environment
+import OclBuilder 
+from OclBuilder import initOcl
+from OclBuilder import getOpt
 import os
 #from optparse import OptionParser
 
-def getOpt(optname,desc,default):
+OclBuilder.opts=Variables()   
 
-    global opts
-    opts.Add(optname,desc,default)
-    optionl = filter (lambda x: x.key==optname,opts.options)
-    if optionl:
-        option=optionl[0]
-        if opts.args.has_key(optname) and opts.args[optname]!=option.default:
-            return opts.args[option.key]
-        else: 
-            return option.default
-    else:
-        print "No such option: "+optname
-
-opts=Variables()   
-dev=getOpt('dev','Device','GPU')
-
-print "Device selected: "+dev
+impl=getOpt('impl','Implementation','GPU')
+print "Selected implementation: "+impl
 
 env = init_environment("root")
 
-#Include Path
-cwd=os.environ['PWD']
-incpath = ['.',cwd+'/OpenCLIntegration']
-env.Append(CPPPATH = incpath)
-ocl_libpath=cwd+'/OpenCLIntegration'
-env.Append(LIBPATH=['/opt/lib/root',ocl_libpath])
-env.Append(LIBS=['OpenCL','OclWrapper'])
-#env.Append(CXXFLAGS = '-g3')
-datapath='DATAPATH="\\"'+cwd+'/text_files/datatest.txt\\""'
-env.Append(CXXFLAGS = ' -Wall -g -O0 -D'+datapath)
+# Initialise OpenCL-specific env values
+env = initOcl(env)
 
-#AddOption('--GPU',)
-#Is it possible to add some sort of option to select CPU or GPU when compiling?
-env.SConscript('OpenCLIntegration/SConstruct')
-if dev=='GPU':
+env.Append(CXXFLAGS = ['-Wall','-Wno-deprecated','-O3'])
+
+# Macro for path to data
+cwd=os.environ['PWD']
+datapath=cwd+'/text_files/datatest.txt'
+datapathmacro='DATAPATH="\\"'+datapath+'\\""'
+env.Append(CXXFLAGS = '-D'+datapathmacro)
+
+# GPU-accelerated or reference implementation?
+if impl=='GPU':
   env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
 		     'src/TSimplePhysics.cc','src/TSimplePhysics_GPU.cc']) #,'src/TPlotter.cc'])  
@@ -47,7 +34,4 @@ else:
 		     'src/TNestedSample.cc', 
 		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc','src/TPlotter.cc'])  
   
-#env.Library('usercode', ['src/TUserCode.cc',
-#		     'src/TNestedSample.cc', 
-#		     'src/TSimplePhysics.cc','src/TSimplePhysics_GPU.cc','src/TPlotter.cc'])
 
