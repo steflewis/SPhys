@@ -24,7 +24,8 @@ print "Device selected: "+dev
 env = init_environment("root")
 
 #Include Path
-incpath = ['.','/home/Stefanie/NestedSampling/CPU_GPU/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
+#incpath = ['.','/home/Stefanie/NestedSampling/CPU_GPU/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
+incpath = ['.','/home/Stefanie/NestedSampling/BeamRecoil/OpenCLIntegration']
 env.Append(CPPPATH = incpath)
 ocl_libpath='/home/Stefanie/NestedSampling/CPU_GPU/OpenCLIntegration'
 env.Append(LIBPATH=[ocl_libpath])

@@ -2,7 +2,8 @@
 env = Environment()
 
 # Include Path
-incpath = ['.','/home/Stefanie/NestedSampling/CPU_GPU/noRoot/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
+#incpath = ['.','/home/Stefanie/NestedSampling/CPU_GPU/noRoot/OpenCLIntegration','/home/Stefanie/GPU_Computing/OpenCL']
+incpath = ['.','/home/Stefanie/NestedSampling/BeamRecoil/OpenCLIntegration']
 env.Append(CPPPATH = incpath)
 ocl_libpath='/home/Stefanie/NestedSampling/CPU_GPU/noRoot/OpenCLIntegration'
 env.Append(LIBPATH=[ocl_libpath])

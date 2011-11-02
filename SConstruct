@@ -8,7 +8,7 @@ import os
 
 OclBuilder.opts=Variables()   
 
-impl=getOpt('impl','Implementation','GPU')
+impl=getOpt('impl','Implementation','OCL')
 print "Selected implementation: "+impl
 
 env = init_environment("root")
@@ -20,12 +20,12 @@ env.Append(CXXFLAGS = ['-Wall','-Wno-deprecated','-O3'])
 
 # Macro for path to data
 cwd=os.environ['PWD']
-datapath=cwd+'/text_files/datatest.txt'
+datapath=cwd+'/text_files/data_set1.txt'
 datapathmacro='DATAPATH="\\"'+datapath+'\\""'
 env.Append(CXXFLAGS = '-D'+datapathmacro)
 
 # GPU-accelerated or reference implementation?
-if impl=='GPU':
+if impl=='OCL':
   env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
 		     'src/TSimplePhysics.cc','src/TSimplePhysics_GPU.cc']) #,'src/TPlotter.cc'])  
