@@ -53,7 +53,7 @@ using namespace std;
  ***********************************************************************/
 
 
-const int noSamples = 3000;  //Set number of objects.
+const int noSamples = 3;//3000;  //Set number of objects.
 
 
 
@@ -102,21 +102,6 @@ int main(void)
 
   if (verbose == 1)
     printf("Start of main function.  logWidth is %g\n",logWidth);
-
-  // if (testing == 1){
-  //   ifstream fin;
-  //   fin.open("/home/stefl/examples/sivia/siviavalues.txt");
-  //   double NewX[noSamples];
-  //   double NewY[noSamples];
-  //   double NewLogL[noSamples];
-
-
-  //   int y = 0;
-  //   while(!fin.eof()){
-  //     fin >> NewX[y] >> NewY[y] >> NewLogL[y];
-  //     y++;
-  //   }
-  // }
   
 
   //Set Prior
@@ -133,13 +118,13 @@ int main(void)
   }
 printf("Finished Prior\n");
    printf("About to run Iterate\n");
-  LH->Iterate();                  //Run
+//  LH->Iterate();                  //Run
    printf("Finished running Iterate\n");
 
-  LH->FinalCorrection();          //Optional final correction
+  //LH->FinalCorrection();          //Optional final correction
   //printf("Final Correction complete\n");
 
-  LH->PrintSummary(posterior);
+ // LH->PrintSummary(posterior);
   printf("Print Summary complete\n"); 
   
 #ifdef PLOT

@@ -1,11 +1,13 @@
+//#include "OclWrapper.h"
+#include "TSimplePhysics_GPU.h"
+//#include "OclWrapper.h"
 #include <math.h>
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
 #include <time.h>
-#include "OclWrapper.h"
-#include "TSimplePhysics_GPU.h"
+
 
 //____________________________________________________________________
 //  Dummy program to test / compile kernel function.
@@ -16,7 +18,7 @@
 int main(void)
 {
   int size = 5;
-  TSimplePhysics_GPU *gpu = new TSimplePhysics_GPU(size);
+  TSimplePhysics_GPU *gpu = new TSimplePhysics_GPU();
   
   srand(time(NULL));
   

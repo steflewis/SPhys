@@ -123,7 +123,7 @@ TSimplePhysics::Prior(int fIndex)
 
   fLogL[fIndex] = LogLhood(B[fIndex],P_gamma[fIndex]);
 
-
+  //printf("Point: %d\t LogL: %lf\n",fIndex,fLogL[fIndex]);
 
   ofstream oldprior;
   if (fIndex == 0){
