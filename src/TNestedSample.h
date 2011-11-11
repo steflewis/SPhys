@@ -43,6 +43,7 @@ using namespace std;
 #define UNIFORM ((rand()+0.5)/(RAND_MAX+1.0)) //uniform inside (0,1)
 
 const int ITERATES = 4000;//40000; 
+
 const int DEBUG    = 0;//0;   //Set to 0 to turn off DEBUG mode.
 
 enum EBoolean {kFalse, kTrue};
