@@ -25,13 +25,13 @@ datapathmacro='DATAPATH="\\"'+datapath+'\\""'
 env.Append(CXXFLAGS = '-D'+datapathmacro)
 
 # GPU-accelerated or reference implementation?
-if impl=='GPU':
+if impl=='CPP_CPU':
   env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc','src/TSimplePhysics_GPU.cc']) #,'src/TPlotter.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc']) #,'src/TPlotter.cc'])  
 else:
   env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc','src/TPlotter.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_GPU.cc']) #,'src/TPlotter.cc'])  
   
 
