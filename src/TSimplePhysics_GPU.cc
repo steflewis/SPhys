@@ -36,8 +36,8 @@ TSimplePhysics_GPU::TSimplePhysics_GPU()
 
 }
 //_____________________________________________________________________
-TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename) : TSimplePhysics(numberOfObjects, logWidth, filename),
-    ocl(true,"Likelihood2.cl","Likelihood2","-cl-fast-relaxed-math")
+TSimplePhysics_GPU::TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename, bool useGPU) : TSimplePhysics(numberOfObjects, logWidth, filename),
+    ocl(useGPU,"Likelihood2.cl","Likelihood2","-cl-fast-relaxed-math")
 {
 
   InitOpenCL();

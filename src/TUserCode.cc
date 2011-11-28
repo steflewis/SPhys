@@ -87,7 +87,15 @@ int main(void)
 {
 
 #ifndef CPPCPU
-  TSimplePhysics_GPU *LH = new TSimplePhysics_GPU(noSamples,logWidth, datafile);
+  bool useGPU=true;
+#ifdef GPU
+  useGPU=true;
+#endif
+#ifdef CPU
+  useGPU=false;
+#endif
+std::cout << "useGPU: " << useGPU <<"\n";  
+  TSimplePhysics_GPU *LH = new TSimplePhysics_GPU(noSamples,logWidth, datafile,useGPU);
 #ifdef PLOT
   TPlotter *plot = new TPlotter(prior_file,posterior,noSamples);
 #endif

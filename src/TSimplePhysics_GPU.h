@@ -61,7 +61,7 @@ public:
   TSimplePhysics_GPU();
   ~TSimplePhysics_GPU() {};
   
-  TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename);
+  TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename, bool useGPU);
   
   float LogLhood(float B, float Pg);
   
