@@ -23,6 +23,9 @@
 //
 //
 // ==================================================================== 
+#ifdef WITH_OMP
+#include <omp.h>
+#endif
 
 #include "TSimplePhysics_CPU.h"
 
@@ -64,23 +67,31 @@ TSimplePhysics_CPU::LogLhood (float B_loc, float Pg_loc)
   // P_gamma         = 0.8;
   delta_L         = 0;
   double LogL     = 0.0;
-  double costerm  = 0.0;
-  double prob     = 0.0;   // Probability
-  double A_tilde;
-  double localpol = 0.0;
+//  double costerm  = 0.0;
+//  double prob     = 0.0;   // Probability
+//  double A_tilde;
+//  double localpol = 0.0;
 
   // For use of log base 2:
   double LogL_2   = 0.0;
   //double A_temp;
-
+#ifdef WITH_OMP
+#pragma omp parallel private(delta_L) shared(LogL_2) 
+// join next line with previous and #define NTH to desired number of threads if required
+// num_threads(NTH)
+{
+#pragma omp for
+#endif
   for (int i = 0; i < nEvents; i++){
     
-    costerm = Pg_loc*B_loc*cos(2*angles[i]);
-    localpol = pol[i];
+    double costerm = Pg_loc*B_loc*cos(2*angles[i]);
+    double localpol = pol[i];
 
     // Calculate A_tilde for each angle
-    A_tilde = ( costerm + delta_L )  / ( 1 + (costerm*delta_L) ) ;
+    double A_tilde = ( costerm + delta_L )  / ( 1 + (costerm*delta_L) ) ;
     
+   double prob = (localpol<0) ? (0.5*(1 + A_tilde)) : ( 0.5*(1 - A_tilde));
+/*
    // Polarisation of 0 corresponds to PERP
     if ( localpol < 0 ){
         prob = 0.5*(1 + A_tilde);
@@ -90,10 +101,12 @@ TSimplePhysics_CPU::LogLhood (float B_loc, float Pg_loc)
     else if ( localpol >= 0 ){
       prob = 0.5*(1 - A_tilde);
     }
+*/
     LogL_2 += log2(prob);
-
- 
   }
+#ifdef WITH_OMP
+}
+#endif
   LogL = LogL_2 / Log2e;
   return LogL;
 
