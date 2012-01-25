@@ -39,7 +39,7 @@
 
 
 //Variable for value of pi:
-const unsigned int NTH = 32; // Number of threads. Make sure this is the same in the .cl file!
+const unsigned int NTH = 16; // Number of threads. Make sure this is the same in the .cl file!
 class TSimplePhysics_GPU : public TSimplePhysics {
 
   
