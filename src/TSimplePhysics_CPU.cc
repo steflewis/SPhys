@@ -26,7 +26,7 @@
 #ifdef WITH_OMP
 #include <omp.h>
 #endif
-
+#define NTH 2
 #include "TSimplePhysics_CPU.h"
 
 
@@ -76,7 +76,7 @@ TSimplePhysics_CPU::LogLhood (float B_loc, float Pg_loc)
   double LogL_2   = 0.0;
   //double A_temp;
 #ifdef WITH_OMP
-#pragma omp parallel private(delta_L) shared(LogL_2) 
+#pragma omp parallel private(delta_L) shared(LogL_2) num_threads(NTH) 
 // join next line with previous and #define NTH to desired number of threads if required
 // num_threads(NTH)
 {
