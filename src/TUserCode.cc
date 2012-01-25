@@ -34,7 +34,7 @@
 // #include <TFile.h>
 
 //#define GPU
-//#define CPU
+//#define CPP_CPU
 #include "OclWrapper.h"
 #include "TSimplePhysics_GPU.h"
 #include "TSimplePhysics_CPU.h"
@@ -86,7 +86,7 @@ char prior_file[] = "oldprior.txt";
 int main(void)
 {
 
-#ifndef CPPCPU
+#ifndef CPP_CPU
   bool useGPU=true;
 #ifdef GPU
   useGPU=true;
@@ -94,14 +94,16 @@ int main(void)
 #ifdef CPU
   useGPU=false;
 #endif
-std::cout << "useGPU: " << useGPU <<"\n";  
+std::cout << "useGPU: " << useGPU <<"\n"; 
+#ifndef CPP_CPU 
   TSimplePhysics_GPU *LH = new TSimplePhysics_GPU(noSamples,logWidth, datafile,useGPU);
+#endif
 #ifdef PLOT
   TPlotter *plot = new TPlotter(prior_file,posterior,noSamples);
 #endif
 #endif
   
-#ifdef CPPCPU
+#ifdef CPP_CPU
    TSimplePhysics_CPU *LH = new TSimplePhysics_CPU(noSamples,logWidth, datafile);
 #ifdef PLOT
   TPlotter *plot = new TPlotter(prior_file,posterior,noSamples);
