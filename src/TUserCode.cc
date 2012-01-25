@@ -33,11 +33,15 @@
 // #include "TMath.h"
 // #include <TFile.h>
 
+//#define CPPCPU
 //#define GPU
 //#define CPU
+#ifndef CPP_CPU
 #include "OclWrapper.h"
 #include "TSimplePhysics_GPU.h"
+#else
 #include "TSimplePhysics_CPU.h"
+#endif
 #ifdef PLOT
 #include "TPlotter.h"
 #endif
