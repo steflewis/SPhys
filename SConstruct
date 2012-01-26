@@ -11,10 +11,17 @@ print "Selected implementation: "+impl
 
 env = init_environment("root")
 
-# Initialise OpenCL-specific env values
-env = initOcl(env)
 
-env.Append(CXXFLAGS = ['-Wall','-Wno-deprecated','-O3'])
+LFLAGS=[]
+IMPLFLAGS=[]
+if impl=='CPP_CPU':
+	LFLAGS= [ '-fopenmp' ]
+	IMPLFLAGS=['-DCPP_CPU','-DWITHOMP']
+else:
+	# Initialise OpenCL-specific env values
+	env = initOcl(env)
+
+env.Append(CXXFLAGS = ['-Wall','-Wno-deprecated','-O3']+IMPLFLAGS, LINKFLAGS=LFLAGS)
 
 # Macro for path to data
 cwd=os.environ['PWD']
@@ -23,13 +30,13 @@ datapathmacro='DATAPATH="\\"'+datapath+'\\""'
 env.Append(CXXFLAGS = '-D'+datapathmacro)
 
 # GPU-accelerated or reference implementation?
-if impl=='GPU':
+if impl=='CPP_CPU':
   env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc','src/TSimplePhysics_GPU.cc']) #,'src/TPlotter.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc']) #,'src/TPlotter.cc'])  
 else:
   env.Program('usercode', ['src/TUserCode.cc',
 		     'src/TNestedSample.cc', 
-		     'src/TSimplePhysics.cc','src/TSimplePhysics_CPU.cc','src/TPlotter.cc'])  
+		     'src/TSimplePhysics.cc','src/TSimplePhysics_GPU.cc']) #,'src/TPlotter.cc'])  
   
 

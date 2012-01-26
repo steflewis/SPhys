@@ -39,7 +39,7 @@
 
 
 //Variable for value of pi:
-const unsigned int NTH = 64; // Number of threads. Make sure this is the same in the .cl file!
+const unsigned int NTH = 16; // Number of threads. Make sure this is the same in the .cl file!
 class TSimplePhysics_GPU : public TSimplePhysics {
 
   
@@ -61,7 +61,7 @@ public:
   TSimplePhysics_GPU();
   ~TSimplePhysics_GPU() {};
   
-  TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename);
+  TSimplePhysics_GPU(int numberOfObjects, double logWidth, char* filename, bool useGPU);
   
   float LogLhood(float B, float Pg);
   
