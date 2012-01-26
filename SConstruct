@@ -1,13 +1,11 @@
-#verbose: scons SHOWBUILD=1 
+# For help on optionbs, scons -h
 from init_env import init_environment
 import OclBuilder 
 from OclBuilder import initOcl
 from OclBuilder import getOpt
 import os
-#from optparse import OptionParser
 
 OclBuilder.opts=Variables()   
-
 impl=getOpt('impl','Implementation','GPU')
 print "Selected implementation: "+impl
 
