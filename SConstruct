@@ -18,7 +18,7 @@ LFLAGS=[]
 IMPLFLAGS=[]
 if impl=='CPP_CPU':
 	LFLAGS= [ '-fopenmp' ]
-	IMPLFLAGS=['-DCPP_CPU','-DWITHOMP']
+	IMPLFLAGS=['-DCPP_CPU','-DWITH_OMP']
 else:
 	# Initialise OpenCL-specific env values
 	env = initOcl(env)
