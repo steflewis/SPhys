@@ -26,7 +26,7 @@
 #ifdef WITH_OMP
 #include <omp.h>
 #endif
-#define NTH 2
+#define NTH 8
 #include "TSimplePhysics_CPU.h"
 
 
@@ -65,7 +65,7 @@ TSimplePhysics_CPU::LogLhood (float B_loc, float Pg_loc)
   
   // logLikelihood function
   // P_gamma         = 0.8;
-  delta_L         = 0;
+  float delta_L         = 0; // WV: made this a local rather than class attribute
   double LogL     = 0.0;
 //  double costerm  = 0.0;
 //  double prob     = 0.0;   // Probability
@@ -76,8 +76,7 @@ TSimplePhysics_CPU::LogLhood (float B_loc, float Pg_loc)
   double LogL_2   = 0.0;
   //double A_temp;
 #ifdef WITH_OMP
-#pragma omp parallel private(delta_L) shared(LogL_2) 
-//num_threads(NTH) 
+#pragma omp parallel private(delta_L) shared(LogL_2) num_threads(NTH) 
 // join next line with previous and #define NTH to desired number of threads if required
 // num_threads(NTH)
 {
