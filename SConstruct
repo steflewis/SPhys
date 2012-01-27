@@ -21,7 +21,7 @@ else:
 	# Initialise OpenCL-specific env values
 	env = initOcl(env)
 
-env.Append(CXXFLAGS = ['-Wall','-Wno-deprecated','-O3']+IMPLFLAGS, LINKFLAGS=LFLAGS)
+env.Append(CXXFLAGS = ['-Wall','-Wno-deprecated','-O3']+IMPLFLAGS, LINKFLAGS = LFLAGS )
 
 # Macro for path to data
 cwd=os.environ['PWD']
