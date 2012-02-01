@@ -26,7 +26,7 @@
 #ifdef WITH_OMP
 #include <omp.h>
 #endif
-#define NTH 8
+//#define NTH 8
 #include "TSimplePhysics_CPU.h"
 
 
@@ -75,16 +75,17 @@ TSimplePhysics_CPU::LogLhood (float B_loc, float Pg_loc)
 for (int i = 0; i < NTH; i++){
 LogL_2_array[i] = 0.0;
 }
-int th_id;
+//int th_id;
   // For use of log base 2:
   double LogL_2   = 0.0;
   //double A_temp;
 #ifdef WITH_OMP
-#pragma omp parallel private(delta_L,th_id) shared(LogL_2_array) num_threads(NTH) 
+#pragma omp parallel private(delta_L) shared(LogL_2_array) num_threads(NTH) 
 // join next line with previous and #define NTH to desired number of threads if required
 // num_threads(NTH)
-  th_id = omp_get_thread_num();
 {
+  int th_id = omp_get_thread_num();
+double LogL_2_th=0.0;
 #pragma omp for
 #endif
   for (int i = 0; i < nEvents; i++){
@@ -107,9 +108,9 @@ int th_id;
       prob = 0.5*(1 - A_tilde);
     }
 */
-    LogL_2_array[th_id] += log2(prob);
-    //LogL_2 += log2(prob);
+    LogL_2_th += log2(prob);
   }
+    LogL_2_array[th_id] = LogL_2_th;
 #ifdef WITH_OMP
 }
 #endif
