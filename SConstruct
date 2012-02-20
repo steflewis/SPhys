@@ -15,13 +15,13 @@ env = init_environment("root")
 LFLAGS=[]
 IMPLFLAGS=[]
 if impl=='CPP_CPU':
-	LFLAGS= [ '-fopenmp' ]
-	IMPLFLAGS=LFLAGS+['-DCPP_CPU','-DWITH_OMP']
+	LFLAGS= [  '-fopenmp' ]
+	IMPLFLAGS=LFLAGS+['-g','-O0','-DCPP_CPU','-DWITH_OMP']
 else:
 	# Initialise OpenCL-specific env values
 	env = initOcl(env)
 
-env.Append(CXXFLAGS = ['-Wall','-Wno-deprecated','-O3']+IMPLFLAGS, LINKFLAGS=LFLAGS)
+env.Append(CXXFLAGS = ['-Wall','-Wno-deprecated']+IMPLFLAGS, LINKFLAGS=LFLAGS)
 
 # Macro for path to data
 cwd=os.environ['PWD']
