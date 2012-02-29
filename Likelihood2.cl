@@ -23,7 +23,7 @@ Log2e: natural log constant
 
 */
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-#define NTH 16 
+//#define NTH 16 
 
 __kernel void Likelihood2(__global float* B_Pg, __global float* angles, __global float* pols, __global float* LogL, const float Log2e, const int Asize, const int nunits) {
 	int g_id=get_group_id(0);
