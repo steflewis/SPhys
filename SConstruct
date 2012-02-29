@@ -8,6 +8,7 @@ import os
 OclBuilder.opts=Variables()   
 impl=getOpt('impl','Implementation','GPU')
 nth=getOpt('nth','#Threads','1')
+iterates=getOpt('iterates','#Iterates','50000')
 print "Selected implementation: "+impl
 
 env = init_environment("root")
@@ -17,7 +18,7 @@ LFLAGS=[]
 IMPLFLAGS=[]
 if impl=='CPP_CPU':
 	LFLAGS= [ '-fopenmp' ]
-	IMPLFLAGS=LFLAGS+['-DCPP_CPU','-DWITH_OMP','-DNTH='+nth]
+	IMPLFLAGS=LFLAGS+['-DCPP_CPU','-DWITH_OMP','-DNTH='+nth,'-DITERATES='+iterates]
 else:
 	# Initialise OpenCL-specific env values
 	env = initOcl(env)
