@@ -19,13 +19,9 @@ env = init_environment("root")
 LFLAGS=[]
 IMPLFLAGS=['-DITERATES='+iters]
 if impl=='CPP_CPU':
-	LFLAGS= [ '-fopenmp' ]
-	IMPLFLAGS=LFLAGS+['-DCPP_CPU','-DWITH_OMP','-DNTH='+nth,'-DITERATES='+iterates]
-=======
     nth=getOpt('nth','#Threads','1')
     LFLAGS= [ '-fopenmp' ]
     IMPLFLAGS+=LFLAGS+['-DCPP_CPU','-DWITH_OMP','-DNTH='+nth]
->>>>>>> ac11f803a9abb793eb33bc868351383f2c873917
 else:
 	# Initialise OpenCL-specific env values
 	env = initOcl(env)
