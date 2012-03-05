@@ -11,15 +11,15 @@ print "Selected implementation: "+impl
 
 iters=getOpt('iters','#Iterates','10000')
 data=getOpt('data','Event data file (in ./text_files)','datatest_10000.txt')
-
+nth=getOpt('nth','#Threads','1')
 
 env = init_environment("root")
 
 
 LFLAGS=[]
-IMPLFLAGS=['-DITERATES='+iters]
+IMPLFLAGS=['-DITERATES='+iters,'-DNTH='+nth]
 if impl=='CPP_CPU':
-    nth=getOpt('nth','#Threads','1')
+#    nth=getOpt('nth','#Threads','1')
     LFLAGS= [ '-fopenmp' ]
     IMPLFLAGS+=LFLAGS+['-DCPP_CPU','-DWITH_OMP','-DNTH='+nth]
 else:
