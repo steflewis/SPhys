@@ -1,5 +1,6 @@
 # scons lib=1
 
-from OclBuilder import build
+from OclBuilder import initOcl
 
-build('',[])
+#build('',[])
+initOcl()

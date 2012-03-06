@@ -3,7 +3,8 @@
  *
  * */
 
-#include <OclWrapper.h>
+#include "OclWrapper.h"
+
 // ----------------------------------------------------------------------------------------
 // Constructors
 // ----------------------------------------------------------------------------------------
@@ -25,8 +26,32 @@ OclWrapper::OclWrapper (bool use_gpu,const char* ksource, const char* kname, con
 		selectDevice();
 		loadKernel( ksource,  kname, kopts);
 		createQueue();
-    }
+        initArgStatus();
+}
 
+void OclWrapper::initOclWrapper(bool use_gpu,const char* ksource, const char* kname, const char* kopts)  {
+	useGPU=use_gpu;
+	nPlatforms=0;
+	ncalls=0;
+
+    // First check the Platform
+	cl::Platform::get(&platformList);
+	checkErr(platformList.size() != 0 ? CL_SUCCESS : -1, "cl::Platform::get");
+#ifdef VERBOSE
+	std::cerr << "Number of platforms is: " << platformList.size() << std::endl;
+#endif
+	nPlatforms=platformList.size();
+#ifdef PLATINFO
+	for (unsigned int i=0;i<platformList.size();i++) {
+		platformInfo.show(platformList,i);
+	}
+#endif
+
+	selectDevice();
+	loadKernel( ksource,  kname, kopts);
+	createQueue();
+    initArgStatus();
+}
 OclWrapper::OclWrapper (bool use_gpu) : useGPU(use_gpu), nPlatforms(0), ncalls(0) {
 
 	    // First check the Platform
@@ -44,6 +69,7 @@ OclWrapper::OclWrapper (bool use_gpu) : useGPU(use_gpu), nPlatforms(0), ncalls(0
 
 		selectDevice();
 		createQueue();
+        initArgStatus();
         
     }
 
@@ -63,6 +89,8 @@ OclWrapper::OclWrapper (bool use_gpu, int devIdx) : useGPU(use_gpu), nPlatforms(
 #endif
 
 		selectDevice(devIdx);
+		createQueue();
+        initArgStatus();
     }
 
 OclWrapper::OclWrapper () : nPlatforms(0) {
@@ -79,6 +107,7 @@ OclWrapper::OclWrapper () : nPlatforms(0) {
 			platformInfo.show(platformList,i);
 		}
 #endif
+        initArgStatus();
 
    }
 // ----------------------------------------------------------------------------------------
@@ -108,7 +137,7 @@ int OclWrapper::nDevices(int pIdx, std::string devt) {
 		platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
 	}
 	int nDevs=devices.size();
-	std::cout << "Number of "<<devt<<" devices for platform "<<pIdx<<": "<< nDevs << "\n";
+//	std::cout << "Number of "<<devt<<" devices for platform "<<pIdx<<": "<< nDevs << "\n";
 #ifdef DEVINFO
 	for (int dIdx=0;dIdx<nDevs;dIdx++) {
 		std::cout << devt<<" Device["<< dIdx << "]: ";
@@ -213,6 +242,8 @@ void OclWrapper::selectDevice(int devIdx) {
 	getContextAndDevices();
 
 #ifdef DEVINFO
+	std::cout << "Number of devices: "<<devices.size() << "\n";
+	std::cout << "Device Info for Platform "<<platformIdx << ", Device "<<deviceIdx<<"\n";
 	deviceInfo.show(devices[deviceIdx]);
 #endif
 }
@@ -307,63 +338,82 @@ void OclWrapper::loadKernel(const char* ksource, const char* kname,const char* o
 
 
 void OclWrapper::createQueue() {
-    //std::cout << "Device: "<<deviceIdx<<"\n";
+   // std::cout << "Device Idx: "<<deviceIdx<<"\n";
+	
     // Create the CommandQueue
 	queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
 
     checkErr(err, "CommandQueue::CommandQueue()");
 }
-void OclWrapper::setArg(unsigned int idx, cl::Buffer* buf) {
-    err = kernel_p->setArg(idx, *buf );
+void OclWrapper::setArg(unsigned int idx, const cl::Buffer& buf) {
+    err = kernel_p->setArg(idx, buf );
+    checkErr(err, "Kernel::setArg()");
+}
+void OclWrapper::setArg(unsigned int idx, const float buf) {
+    err = kernel_p->setArg(idx, buf );
+    checkErr(err, "Kernel::setArg()");
+}
+void OclWrapper::setArg(unsigned int idx, const int buf) {
+    err = kernel_p->setArg(idx, buf );
     checkErr(err, "Kernel::setArg()");
 }
 
 int OclWrapper::enqueueNDRangeRun(const cl::NDRange& globalRange,const cl::NDRange& localRange) {
 	// Create the CommandQueue
-if ((void*)queue_p==NULL) {
-std::cout<<"Creating queue...\n";
-	queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
-}
-	//queue = cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
-	checkErr(err, "CommandQueue::CommandQueue()");
+    if ((void*)queue_p==NULL) {
+#ifdef VERBOSE
+			std::cout<<"Creating queue...\n";
+#endif
+			queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
+            checkErr(err, "CommandQueue::CommandQueue()");
+    }
 	ncalls++;
 // VERBOSE
-	//std::cout << "# kernel calls: "<<ncalls <<std::endl;
-	//kernel_functor=kernel_p->bind(*queue_p,globalRange, localRange);
+//	std::cout << "# kernel calls: "<<ncalls <<std::endl;
 	cl::Event event;
+//	std::cout << "ocl:"<<this<<"\n";
+//    std::cout << "queue_p:"<<queue_p<<"\n";
+//    std::cout << "kernel_p:"<<kernel_p<<"\n";
+//    std::cout << "FIXME! enqueueNDRangeKernel is commented out!\n";
+    // the kernel can be queried successfully ...
+#ifdef VERBOSE
+    // When calling from Fortran, the next line gives the error:
+    // mataccF(3498,0x7fff70c14cc0) malloc: *** error for object 0x1000d1840: pointer being freed was not allocated
+    // *** set a breakpoint in malloc_error_break to debug
+//    const std::string infostr = this->kernel_p->getInfo<CL_KERNEL_FUNCTION_NAME>() ;
+//    std::cout << infostr <<"\n";
+#endif // VERBOSE
 	err = queue_p->enqueueNDRangeKernel(
-	//err = queue.enqueueNDRangeKernel(
             *kernel_p,
             cl::NullRange,
 	    globalRange,localRange,
 	    NULL,&event);
-	event.wait();
-	return ncalls;
+	event.wait(); // here is where it goes wrong with "-36, CL_INVALID_COMMAND_QUEUE
+
+    return ncalls;
 }
 
 int OclWrapper::enqueueNDRange(const cl::NDRange& globalRange,const cl::NDRange& localRange) {
 	// Create the CommandQueue
-if ((void*)queue_p==NULL) {
-	queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
-}
-	//queue = cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
+	if ((void*)queue_p==NULL) {
+		queue_p = new cl::CommandQueue(*context_p, devices[deviceIdx], 0, &err);
+	}
 	checkErr(err, "CommandQueue::CommandQueue()");
 	ncalls++;
 // VERBOSE
 	//std::cout << "# kernel calls: "<<ncalls <<std::endl;
 	kernel_functor=kernel_p->bind(*queue_p,globalRange, localRange);
-	//kernel_functor=kernel_p->bind(queue,globalRange, localRange);
 	return ncalls;
 }
 
-cl::Buffer* OclWrapper::makeStaticWriteBuffer(int idx,int bufSize) {
-	 buf[idx]= cl::Buffer(
-	            *context_p,
-	            CL_MEM_WRITE_ONLY,
-	            bufSize,NULL,&err);
-	 checkErr(err, "Buffer::Buffer()");
-	return buf;
-}
+//cl::Buffer* OclWrapper::makeStaticWriteBuffer(int idx,int bufSize) {
+//	 buf[idx]= cl::Buffer(
+//	            *context_p,
+//	            CL_MEM_WRITE_ONLY,
+//	            bufSize,NULL,&err);
+//	 checkErr(err, "Buffer::Buffer()");
+//	return buf;
+//}
 
 cl::Buffer& OclWrapper::makeWriteBuffer(int bufSize) {
 	 cl::Buffer* buf_p= new cl::Buffer(
@@ -373,6 +423,17 @@ cl::Buffer& OclWrapper::makeWriteBuffer(int bufSize) {
 	 checkErr(err, "Buffer::Buffer()");
 	cl::Buffer& buf_r = *buf_p;
 	return buf_r;
+}
+
+void OclWrapper::makeWriteBufferPos(int argpos, int bufSize) {
+	 cl::Buffer* buf_p= new cl::Buffer(
+	            *context_p,
+	            CL_MEM_WRITE_ONLY,
+	            bufSize,NULL,&err);
+	 checkErr(err, "Buffer::Buffer()");
+    buf[argpos]=buf_p;
+    cl::Buffer& buf_r=*buf_p;
+    setArg(argpos,buf_r);
 }
 
 cl::Buffer& OclWrapper::makeReadBuffer(int bufSize,void* hostBuf, cl_mem_flags flags) {
@@ -387,21 +448,34 @@ cl::Buffer& OclWrapper::makeReadBuffer(int bufSize,void* hostBuf, cl_mem_flags f
      cl::Buffer& buf_r=*buf_p;
 	return buf_r;
 }
-cl::Buffer* OclWrapper::makeStaticReadBuffer(int idx,int bufSize,void* hostBuf, cl_mem_flags flags) {
-	 //cl::Buffer* buf_p= new cl::Buffer(
-	 buf[idx]= cl::Buffer(
-	 //buf_p1= new cl::Buffer(
+//cl::Buffer* OclWrapper::makeStaticReadBuffer(int idx,int bufSize,void* hostBuf, cl_mem_flags flags) {
+//	 //cl::Buffer* buf_p= new cl::Buffer(
+//	 buf[idx]= cl::Buffer(
+//	 //buf_p1= new cl::Buffer(
+//	            *context_p,
+//	            flags,
+//	            bufSize,hostBuf,&err);
+//	 checkErr(err, "Buffer::Buffer()");
+//	return buf;
+//}
+
+void OclWrapper::makeReadBufferPos(int argpos, int bufSize) {
+	 cl::Buffer* buf_p= new cl::Buffer(
 	            *context_p,
-	            flags,
-	            bufSize,hostBuf,&err);
+	            CL_MEM_READ_ONLY,
+	            bufSize,NULL,&err);
 	 checkErr(err, "Buffer::Buffer()");
-	return buf;
+   buf[argpos]=buf_p;
+   cl::Buffer& buf_r=*buf_p;
+   setArg(argpos,buf_r);
+
 }
 
-void OclWrapper::readStaticBuffer(int idx, int bufSize, void* hostBuf) {
+void OclWrapper::readBufferPos(int idx, int bufSize, void* hostBuf) {
+//    std::cout << queue_p<<"\n";
 
 	err = queue_p->enqueueReadBuffer(
-	            buf[idx],
+	            *buf[idx],
 	            CL_TRUE,
 	            0,
 	            bufSize,
@@ -452,7 +526,7 @@ void OclWrapper::writeBuffer1( int bufSize, void* hostBuf) {
 }
 */
 void OclWrapper::writeBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf) {
-
+//    std::cout << queue_p<<"\n";
 	err = queue_p->enqueueWriteBuffer(
 	            deviceBuf,
 	            CL_TRUE,
@@ -479,6 +553,11 @@ void OclWrapper::writeBuffer(const cl::Buffer& deviceBuf, bool blocking_write,
 	checkErr(err, "CommandQueue::enqueueWriteBuffer()");
 
 }
+
+void OclWrapper::writeBufferPos(int argpos, int bufSize, void* hostBuf) {
+    OclWrapper::writeBuffer(*buf[argpos], bufSize, hostBuf);
+}
+
 // ----------------------------------------------------------------------------------------
 // Private methods
 // ----------------------------------------------------------------------------------------
@@ -520,9 +599,21 @@ void OclWrapper::getDevices() {
 	devices = context_p->getInfo<CL_CONTEXT_DEVICES>();
 	checkErr( devices.size() > 0 ? CL_SUCCESS : -1, "devices.size() > 0");
 }
+
+void OclWrapper::initArgStatus (void) {
+    for (int i=0;i<NBUFS;i++) {
+        argStatus[i]=0;
+    }
+}
+
+int OclWrapper::getMaxComputeUnits() {
+	return deviceInfo.max_compute_units(devices[deviceIdx]);
+}
+
 // ----------------------------------------------------------------------------------------
 // Functions, not part of the class
 // ----------------------------------------------------------------------------------------
+
 void checkErr(cl_int err, const char * name) {
 	if (err != CL_SUCCESS) {
 		std::cerr << "ERROR: " << name << " (" << err << ")" << std::endl;
@@ -530,6 +621,4 @@ void checkErr(cl_int err, const char * name) {
 	}
 }
 
-int OclWrapper::getMaxComputeUnits() {
-	return deviceInfo.max_compute_units(devices[deviceIdx]);
-}
+

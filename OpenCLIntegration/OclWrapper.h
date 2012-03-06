@@ -15,20 +15,23 @@
 #endif
 
 
-
+#include <sys/time.h>
 //#include <cstdio>
 //#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <cstdlib>
 //#include <iterator>
 //#include <Timing.h>
+
 #include <DeviceInfo.h>
 #include <PlatformInfo.h>
+
 #define NBUFS 16
 void checkErr(cl_int err, const char * name);
-
+inline double wsecond();
 typedef unsigned int uint;
 
 #if MRMODE==0
@@ -56,6 +59,8 @@ class OclWrapper {
 
 		void getContextAndDevices();
 		void getDevices();
+		// For the Fortran interface, but we could use this approach in C/C++ as well
+		void initArgStatus();
 		
 
 	public:
@@ -66,7 +71,7 @@ class OclWrapper {
 		cl::KernelFunctor kernel_functor;
 		cl::CommandQueue* queue_p;
 		cl::CommandQueue queue;
-		cl::Buffer buf[NBUFS];
+		cl::Buffer* buf[NBUFS];
 		cl::Buffer* buf_p;
 		int nPlatforms;
 		DeviceInfo deviceInfo;
@@ -75,10 +80,14 @@ class OclWrapper {
 		PlatformInfo platformInfo;
 #endif
 		int ncalls;
+		// For the Fortran interface, but we could use this approach in C/C++ as well
+		int argStatus[NBUFS];
+		
 		OclWrapper (bool use_gpu);
 		OclWrapper (bool use_gpu, int deviceIdx);
 		OclWrapper ();
 		OclWrapper (bool use_gpu,const char* ksource, const char* kname, const char* kopts="");
+		void initOclWrapper(bool use_gpu,const char* ksource, const char* kname, const char* kopts="");
 
 		bool hasGPU(int pIdx);
 		bool hasCPU(int pIdx);
@@ -98,15 +107,22 @@ class OclWrapper {
 		void storeBinary(const char* ksource);
 
 		int getMaxComputeUnits();
+
 		cl::Buffer& makeWriteBuffer( int bufSize );
-		cl::Buffer* makeStaticWriteBuffer( int idx,int bufSize );
+//		cl::Buffer* makeStaticWriteBuffer( int idx,int bufSize );
+		void makeWriteBufferPos(int argpos, int bufSize );
+
 		cl::Buffer& makeReadBuffer(int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY );
-		cl::Buffer* makeStaticReadBuffer(int idx,int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY );
+//		cl::Buffer* makeStaticReadBuffer(int idx,int bufSize, void* hostBuf = NULL, cl_mem_flags flags = CL_MEM_READ_ONLY );
+		void makeReadBufferPos(int argpos, int bufSize);
+
 		void createQueue();
-		void setArg(unsigned int idx, cl::Buffer* buf);
+		void setArg(unsigned int idx, const cl::Buffer& buf);
+		void setArg(unsigned int idx, const int buf);
+		void setArg(unsigned int idx, const float buf);
 		int enqueueNDRange(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
 		int enqueueNDRangeRun(const cl::NDRange& = cl::NDRange(1),const cl::NDRange& = cl::NullRange);
-		void readStaticBuffer(int idx, int bufSize, void* hostBuf);
+
 		void readBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
 		void readBuffer(
 				const cl::Buffer& buffer,
@@ -116,8 +132,9 @@ class OclWrapper {
 				void * ptr,
 				const VECTOR_CLASS<cl::Event> * events = NULL,
 				cl::Event * event = NULL);
+//		void readStaticBuffer(int idx, int bufSize, void* hostBuf);
+		void readBufferPos(int argpos, int bufSize, void* hostBuf);
 
-//		void writeBuffer1(int bufSize, void* hostBuf);
 		void writeBuffer(const cl::Buffer& deviceBuf, int bufSize, void* hostBuf);
 		void writeBuffer(
 				const cl::Buffer& deviceBuf,
@@ -127,5 +144,18 @@ class OclWrapper {
 				void * ptr,
 				const VECTOR_CLASS<cl::Event> * events = NULL,
 				cl::Event * event = NULL);
+		void writeBufferPos(int argpos, int bufSize, void* hostBuf);
 };
+
+
+double wsecond()
+{
+        struct timeval sampletime;
+        double         time;
+
+        gettimeofday( &sampletime, NULL );
+        time = sampletime.tv_sec + (sampletime.tv_usec / 1000000.0);
+        return( time*1000.0 ); // return time in ms
+}
+
 #endif  // __OCLWRAPPER_H__
