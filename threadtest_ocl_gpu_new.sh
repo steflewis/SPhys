@@ -8,10 +8,10 @@ echo "Entering shell script" >>$FILE
 flag=0
 hour=$((`date +%H`))
 min=$((`date +%M` + 2))
-# #DIR=/home/Stefanie/NestedSampling/BeamRecoil/text_files/
-# for NTH in 1 2 4 8 16 32 64
-# do
-#     #scons dev=GPU impl=GPU iters=50000 data=${DIR}datatest_100000_1.txt nth=$NTH
+#DIR=/home/Stefanie/NestedSampling/BeamRecoil/text_files/
+for NTH in 1 2 4 8 16 32 64
+do
+     scons dev=GPU impl=GPU iters=50000 data=${DIR}datatest_100000_1.txt nth=$NTH
 #     #FILE=/home/Stefanie/NestedSampling/BeamRecoil/times_ocl_gpu_test_100000_${NTH}thr.out
 #     #if [ -e $FILE ];
 #     #then
@@ -21,7 +21,7 @@ min=$((`date +%M` + 2))
 #     
 #     for (( c=1; c<=10; c++ ))
 #     do
-while [ $flag=0 ]; do
+#while [ $flag=0 ]; do
   
   
   if [[ $(date +%H) -lt $hour || $(date +%M) -lt $min ]]; then
@@ -33,8 +33,8 @@ while [ $flag=0 ]; do
   fi
       # # 	  
       # # 	  
-  echo "Hurray $flag" >>$FILE 
-  sleep 5s
+  echo "Hurray $NTH" >>$FILE 
+  sleep 30s
       # # #      { time ./usercode; } 2>>$FILE
 done
       
